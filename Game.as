@@ -45,12 +45,11 @@
 
 		private var avgPing: Number = 0;
 		private var rcntUpdt: Number = 0;
-		private var xSmooth: Number = 0;
-		private var ySmooth: Number = 0;
-		private var lastX: Number = 0;
-		private var lastY: Number = 0;
-		private var lastM: Message = null, prevM:Message = null;
-
+		private var messages:Vector.<Message> = new Vector.<Message>();
+		private var wtime:int = 0;
+		
+		private var lastX:Number = 0;
+		private var lastY:Number = 0;
 		private var xArea:int = 274;
 		private var yArea:int = 214;
 		
@@ -210,32 +209,59 @@
 		}
 
 		private function onEnterFrame(e: Event) {
-			var now: uint = getTimer();
-			avgPing = (now - rcntUpdt);
-
-			/*if(fsu == 2)
-				prevM = lastM;
-			if (fsu > 0){
-				xSmooth = (prevM.getNumber(0) - lastX);
-				ySmooth = (prevM.getNumber(1) - lastY);
-			} else {
-				xSmooth = 0;
-				ySmooth = 0;
-			}*/
-
+			if(fsu!=0){
+				while (fsu > 5){
+					fsu--;
+					messages.shift();
+				}
+				var msg:Message = messages.shift();
+				fsu--;
+				drawWorld(msg);
+			}
 			addChild(ping);
 			ping.text = String(fsu);
-						if(fsu>0)
-				fsu=0;
-			for (var i: uint = 0; i < 10; i++) {
-				for (var j: uint = 0; j < _feedPtr[i]; j++) {
-					var feed: Feed = _feed[i][j];
-					feed.x -= xSmooth*640/xArea;
-					feed.y -= ySmooth*360/yArea;
+		}
+		
+		private function drawWorld(m:Message){
+			this.removeChildren();
+			xArea = m.getInt(2);
+			yArea = m.getInt(3);
+			var curX: Number = m.getNumber(0);
+			var curY: Number = m.getNumber(1);
+			lastX = curX;
+			lastY = curY;
+			for (var i: int = 0; i < 10; i++) {
+				_feedPtr[i] = 0;
+			}
+
+			for (i = 0; i < m.length; i += 4) {
+				var id = m.getInt(i);
+				var _x = (m.getNumber(i + 1)-curX + xArea/2)/xArea*640;
+				var _y = (m.getNumber(i + 2)-curY + yArea/2)/yArea*360;
+				var size = m.getNumber(i + 3);
+				if (id < 10) {
+					var feed: Feed;
+					if (_feedPtr[id] == _feed[id].length) {
+						feed = new Feed(_x, _y, id);
+						_feed[id].push(feed);
+					} else {
+						feed = _feed[id][_feedPtr[id]];
+						feed.x = _x;
+						feed.y = _y;
+					}
+					addChildAt(feed, 0);
+					_feedPtr[id] += 1;
+				} else if (id == 13) {
+					var virus: Cell = new Cell(_x, _y, size, 0x00FF00, true);
+					addChild(virus);
+				} else if (id > 1000) {
+					var cell: Cell = new Cell(_x,
+						_y,
+						size,
+						id * 28 % 256);
+					this.addChild(cell);
 				}
 			}
-			lastX += xSmooth;
-			lastY += ySmooth;
 		}
 		//В сообщении передается массив в котором последовательно идут: 1) айди объекта, 2) X, 3) Y, 4) радиус, далее айди следующего объекта и т.д. 
 		//Айди следующие: 
@@ -244,52 +270,16 @@
 		//13 - вирус
 		//Всё что от 1001 и более - клетка (1000 + номер игрока, это чтобы различать игроков)
 		private function update(m: Message): void {
-
-			this.removeChildren();
+			messages.push(m);
 			fsu++;
-			if (prevM != null) {
-				xArea = prevM.getInt(2);
-				yArea = prevM.getInt(3);
-				var curX: Number = prevM.getNumber(0);
-				var curY: Number = prevM.getNumber(1);
-				lastX = curX;
-				lastY = curY;
-				for (var i: int = 0; i < 10; i++) {
-					_feedPtr[i] = 0;
-				}
-
-				for (i = 0; i < prevM.length; i += 4) {
-					var id = prevM.getInt(i);
-					var _x = (prevM.getNumber(i + 1)-curX + xArea/2)/xArea*640;
-					var _y = (prevM.getNumber(i + 2)-curY + yArea/2)/yArea*360;
-					var size = prevM.getNumber(i + 3);
-					if (id < 10) {
-						var feed: Feed;
-						if (_feedPtr[id] == _feed[id].length) {
-							feed = new Feed(_x, _y, id);
-							_feed[id].push(feed);
-						} else {
-							feed = _feed[id][_feedPtr[id]];
-							feed.x = _x;
-							feed.y = _y;
-						}
-						addChildAt(feed, 0);
-						_feedPtr[id] += 1;
-					} else if (id == 13) {
-						var virus: Cell = new Cell(_x, _y, size, 0x00FF00, true);
-						addChild(virus);
-					} else if (id > 1000) {
-						var cell: Cell = new Cell(_x,
-							_y,
-							size,
-							id * 28 % 256);
-						this.addChild(cell);
-					}
-				}
+			/*
+			
+			if (m != null) {
+				
 			}
 			rcntUpdt = getTimer();
-			prevM = lastM;
-			lastM = m;
+			m = lastM;
+			lastM = m;*/
 		}
 
 		// присоединение нового игрока

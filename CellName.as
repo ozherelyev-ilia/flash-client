@@ -30,7 +30,7 @@
 			setSize(_size);
 
 			this.filters = [shadow];
-
+			this.textField.gridFitType = flash.text.GridFitType.NONE;
 		}
 
 		public function setSize(size: Number): void {
