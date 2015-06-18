@@ -12,6 +12,7 @@
 	import flash.display.StageScaleMode;
 	import flash.geom.Rectangle;
 	import flash.events.KeyboardEvent;
+	import flash.utils.getTimer;
 	import flash.utils.Timer;
 
 	public class Game extends Sprite {
@@ -32,13 +33,28 @@
 
 		//private var _players: Vector.<String> = new Vector.<String>(); //Список игроков
 		private var currentPlayer: Player;
-		private var players: Vector.<Player> = new Vector.<Player>();
-		//private var _cells: Vector.<Cell> = new Vector.<Cell> (); // Список клеток всех игроков
+		private var players: Vector.<Player> = new Vector.<Player> ();
+		private var _cells: Vector.<Cell> = new Vector.<Cell> (); // Список клеток всех игроков
 		private var _throws: Vector.<CellChild> = new Vector.<CellChild> (); // Список отщепленных кормовых частиц с клетки
 		private var _viruses: Vector.<VirusCell> = new Vector.<VirusCell> (); // Список вирусов
+		private var _feed: Vector.<Vector.<Feed>> = new Vector.<Vector.<Feed>> ();
+		private var _feedPtr: Vector.<int> = new Vector.<int> ();
 
-		private var isMouseDown:Boolean = false;
+		private var isMouseDown: Boolean = false;
 		private var messageString: String = "";
+
+		private var avgPing: Number = 0;
+		private var rcntUpdt: Number = 0;
+		private var xSmooth: Number = 0;
+		private var ySmooth: Number = 0;
+		private var lastX: Number = 0;
+		private var lastY: Number = 0;
+		private var lastM: Message = null, prevM:Message = null;
+
+		private var xArea:int = 274;
+		private var yArea:int = 214;
+		
+		private var fsu:int = 0;
 		//---------------------------------------
 		// CONSTRUCTOR
 		//---------------------------------------
@@ -59,12 +75,12 @@
 			//stage.addEventListener(MouseEvent., msclick);
 			stage.addEventListener(MouseEvent.MOUSE_DOWN, buttonPressed);
 			stage.addEventListener(MouseEvent.MOUSE_UP, buttonReleased);
-			
+
 			stage.addEventListener(KeyboardEvent.KEY_DOWN, displayKeyDown);
 		}
 
 		function mclick(e: MouseEvent) {
-	
+
 			//trace(_players);
 			/*
 			var l:int = _viruses.length;
@@ -75,14 +91,14 @@
 			}
 			*/
 		}
-		
-		function buttonPressed(event:MouseEvent){
+
+		function buttonPressed(event: MouseEvent) {
 			isMouseDown = true;
 		}
 
-		function buttonReleased(event:MouseEvent){
+		function buttonReleased(event: MouseEvent) {
 			isMouseDown = false;
-			
+
 			if (messageString != "" || messageString != " ") {
 				trace(messageString);
 				connection.send("playerSaying", messageString);
@@ -100,24 +116,29 @@
 			} else {
 				if (messageString.length < 50) messageString += String.fromCharCode(e.charCode);
 			}
-			
+
 		}
 
 		private function init(event: Event): void {
 			if (event != null) {
 				removeEventListener(Event.ADDED_TO_STAGE, init);
 			}
-			
+
+			for (var i: int = 0; i < 10; i++) {
+				_feed[i] = new Vector.<Feed>();
+				_feedPtr[i] = 0;
+			}
+
 			_enviroment = new Sprite(); // Спрайт для кормовых точек
 			addChild(_enviroment);
 			_display = new Sprite(); // Спрайт для клеток игроков и вирусов
 			addChild(_display);
 			_background = new Sprite(); // Спрайт для фона (пока не используется) 
 			addChild(_background);
-			
+
 			userID = "User" + Math.floor(Math.random() * 1000).toString(); //генерация Айди для текущего игрока
 			// TODO предусмотреть чтобы он не повторялся с другими игроками
-			
+
 			// соединение с сервером
 			// gameID - идентификатор хостинг-сервера. Не трогать
 			// userID - ID текущего игрока, запустившего данное приложение 
@@ -152,16 +173,17 @@
 			//cell.x = _display.width / 2;
 			//cell.y = _display.height / 2;
 			//_cells.push(cell);
-			
+
 
 		}
 
 		// отправка на сервер сообщения с текущими координатами мыши
 		// срабатывает как ответ на запрос "mouseRequest" с сервера, который поступает каждые 30 мс
-		function sendMouseXY(m:Message) {
+		function sendMouseXY(m: Message) {
 			if (connection != null) {
-				connection.send("currentMouse", _display.mouseX, _display.mouseY);
+				connection.send("currentMouse", lastX+(_display.mouseX-360)/640*xArea, lastY+(_display.mouseY-180)/360*yArea);
 			}
+			//trace("mouse");
 
 		}
 
@@ -169,49 +191,133 @@
 		 * @private
 		 */
 		private function handleJoin(connection: Connection): void {
-			
+
 			if (connection != null) this.connection = connection;
-			
-			connection.addMessageHandler("eatenPoints", gotEatenPoints); // Добавление обработчика сообщения о съеденных точках кормежки
+
+			/*connection.addMessageHandler("eatenPoints", gotEatenPoints); // Добавление обработчика сообщения о съеденных точках кормежки
 			connection.addMessageHandler("eatenThrows", gotEatenThrows); // Добавление обработчика сообщения о съеденных отщепенцев клеток
 			connection.addMessageHandler("updateNutrits", gotNuts); // Добавление обработчика сообщения с новыми точками кормежки
 			connection.addMessageHandler("score", gotScore); // Добавление обработчика сообщения текущего счёта игрока
-			connection.addMessageHandler("mouseRequest", sendMouseXY); // Добавление обработчика сообщения-запроса текущих координат мыши
 			connection.addMessageHandler("newPlayer", newPlayerJoined); // Добавление обработчика сообщения о присоединении нового игрока
 			connection.addMessageHandler("playerLeft", playerLeft); // Добавление обработчика сообщения о уходе какого-либо игрока
-			
-			this.connection.addMessageHandler("*", messageHandler); // Добавление обработчика прочих сообщений
+			*/
+			connection.addMessageHandler("mouseRequest", sendMouseXY); // Добавление обработчика сообщения-запроса текущих координат мыши
+
+			connection.addMessageHandler("currentState", update);
+			//this.connection.addMessageHandler("*", messageHandler); // Добавление обработчика прочих сообщений
+
+			addEventListener(Event.ENTER_FRAME, onEnterFrame);
 		}
-		
+
+		private function onEnterFrame(e: Event) {
+			var now: uint = getTimer();
+			avgPing = (now - rcntUpdt);
+
+			/*if(fsu == 2)
+				prevM = lastM;
+			if (fsu > 0){
+				xSmooth = (prevM.getNumber(0) - lastX);
+				ySmooth = (prevM.getNumber(1) - lastY);
+			} else {
+				xSmooth = 0;
+				ySmooth = 0;
+			}*/
+
+			addChild(ping);
+			ping.text = String(fsu);
+						if(fsu>0)
+				fsu=0;
+			for (var i: uint = 0; i < 10; i++) {
+				for (var j: uint = 0; j < _feedPtr[i]; j++) {
+					var feed: Feed = _feed[i][j];
+					feed.x -= xSmooth*640/xArea;
+					feed.y -= ySmooth*360/yArea;
+				}
+			}
+			lastX += xSmooth;
+			lastY += ySmooth;
+		}
+		//В сообщении передается массив в котором последовательно идут: 1) айди объекта, 2) X, 3) Y, 4) радиус, далее айди следующего объекта и т.д. 
+		//Айди следующие: 
+		//0-9 - корм
+		//11 - частица клетки
+		//13 - вирус
+		//Всё что от 1001 и более - клетка (1000 + номер игрока, это чтобы различать игроков)
+		private function update(m: Message): void {
+
+			this.removeChildren();
+			fsu++;
+			if (prevM != null) {
+				xArea = prevM.getInt(2);
+				yArea = prevM.getInt(3);
+				var curX: Number = prevM.getNumber(0);
+				var curY: Number = prevM.getNumber(1);
+				lastX = curX;
+				lastY = curY;
+				for (var i: int = 0; i < 10; i++) {
+					_feedPtr[i] = 0;
+				}
+
+				for (i = 0; i < prevM.length; i += 4) {
+					var id = prevM.getInt(i);
+					var _x = (prevM.getNumber(i + 1)-curX + xArea/2)/xArea*640;
+					var _y = (prevM.getNumber(i + 2)-curY + yArea/2)/yArea*360;
+					var size = prevM.getNumber(i + 3);
+					if (id < 10) {
+						var feed: Feed;
+						if (_feedPtr[id] == _feed[id].length) {
+							feed = new Feed(_x, _y, id);
+							_feed[id].push(feed);
+						} else {
+							feed = _feed[id][_feedPtr[id]];
+							feed.x = _x;
+							feed.y = _y;
+						}
+						addChildAt(feed, 0);
+						_feedPtr[id] += 1;
+					} else if (id == 13) {
+						var virus: Cell = new Cell(_x, _y, size, 0x00FF00, true);
+						addChild(virus);
+					} else if (id > 1000) {
+						var cell: Cell = new Cell(_x,
+							_y,
+							size,
+							id * 28 % 256);
+						this.addChild(cell);
+					}
+				}
+			}
+			rcntUpdt = getTimer();
+			prevM = lastM;
+			lastM = m;
+		}
+
 		// присоединение нового игрока
 		private function newPlayerJoined(m: Message) {
 			// в сообщение ID присоединившегося игрока
 			//_players.push(m.getString(0));
 			var player = new Player(m.getString(0));
 			//players.push(player);
-			if (m.getString(0) == userID) 
-			{
+			if (m.getString(0) == userID) {
 				currentPlayer = player;
-			}
-			else 
-			{
+			} else {
 				players.push(player);
 			}
-			
+
 			_display.addChild(player.Cells[0]);
 		}
-		
+
 		// уход одного из игроков
 		private function playerLeft(m: Message) {
 			// в сообщение ID ушедшего игрока
-			
+
 			var player = findPlayerById(m.getString(0));
-			
+
 			if (player != null) {
-				var ind : int = players.indexOf(player);
-				if (ind != -1) players.splice(ind,1);
+				var ind: int = players.indexOf(player);
+				if (ind != -1) players.splice(ind, 1);
 			}
-			
+
 		}
 
 		// функция удаления объектов со спрайтов по имени
@@ -224,16 +330,15 @@
 			parentObj.removeChild(t);
 			t = null;
 		}
-		
+
 		function findThrowByName(throwName: String): CellChild {
 			var curThrow = _display.getChildByName(throwName);
 			return curThrow;
 		}
-		
-		function findPlayerById(playerId: String): Player
-		{
-			var index : int = -1;
-			for (var i : uint = 0; i < players.length; i++) {
+
+		function findPlayerById(playerId: String): Player {
+			var index: int = -1;
+			for (var i: uint = 0; i < players.length; i++) {
 				if (players[i].Id == playerId) {
 					index = i;
 					return players[i];
@@ -241,9 +346,8 @@
 			}
 			return null;
 		}
-		
-		function findVirusByName(virusName: String): VirusCell
-		{
+
+		function findVirusByName(virusName: String): VirusCell {
 			var virus = _enviroment.getChildByName(virusName);
 			return virus;
 		}
@@ -256,7 +360,7 @@
 			// 3) Id точки кормежки
 			// и далее по новой для следующей точки
 			trace("pointGot", m.length);
-			
+
 			var i: int;
 			for (i = 0; i < (m.length); i += 3) {
 				var pointx = m.getInt(i);
@@ -266,7 +370,7 @@
 				var nutriPoint = new Shape();
 				var myColor = Math.round(Math.random() * 0xFFFFFF);
 				nutriPoint.graphics.beginFill(myColor);
-				nutriPoint.graphics.drawRect(pointx-1, pointy-1, 2, 2);
+				nutriPoint.graphics.drawRect(pointx - 1, pointy - 1, 2, 2);
 				//nutriPoint.graphics.drawEllipse(pointx, pointy, 2, 2);
 				nutriPoint.graphics.endFill();
 				nutriPoint.name = pointid;
@@ -284,7 +388,7 @@
 			//
 			var index = m.getInt(1);
 			_r = m.getNumber(2);
-			currentPlayer.Cells[index].SetSize(_r);
+			//currentPlayer.Cells[index].SetSize(_r);
 		}
 
 		// получение съеденной точки
@@ -302,19 +406,19 @@
 			// находим его по названию и удаляем
 			removeChildWithRef("throw" + m.getString(0), _display);
 		}
-		
-		
+
+
 		private function messageHandler(m: Message) {
 			// получение позиции клетки в текущий момент времени
 			if (m.type == "ncellposition") {
 				// в сообщении 1) айди игрока 2) номер текущей клетки 3) X-позиция этой клетки 4) Y-позиция этой клетки
-				
+
 				// если это твой айди, то
 				if (m.getString(0) == userID) {
-					
+
 					// коэффициент масштабирования
 					// он должен быть не постоянным, а зависеть от размера клетки/клеток игрока - чем больше, тем меньше коэффициэнт
-					var sclK:int = 3;
+					var sclK: int = 3;
 
 					for (var i: int = 0; i < m.length; i += 4) {
 
@@ -322,13 +426,13 @@
 						var xx = m.getNumber(i + 2);
 						var yy = m.getNumber(i + 3);
 
-						var curCell:Cell = currentPlayer.FindCellByNumber(index);
-						
+						var curCell: Cell = currentPlayer.FindCellByNumber(index);
+
 						if (curCell != null) {
 							curCell.x = xx;
 							curCell.y = yy;
 						}
-						
+
 						//currentPlayer.Cells[index].x = xx;
 						//currentPlayer.Cells[index].y = yy;
 						//_cells[index].x = xx;
@@ -343,7 +447,7 @@
 					_enviroment.transform.matrix = mat;
 					_display.transform.matrix = mat;
 					_background.transform.matrix = mat;
-					
+
 				} else {
 					//trace(m.getString(0));
 					//trace(players[0].Id, currentPlayer.Id);
@@ -358,24 +462,24 @@
 						var xx = m.getNumber(i + 2);
 						var yy = m.getNumber(i + 3);
 
-						var curCell:Cell = otherplayer.FindCellByNumber(index);
+						var curCell: Cell = otherplayer.FindCellByNumber(index);
 						if (curCell != null) {
 							curCell.x = xx;
 							curCell.y = yy;
 						}
-						
+
 						/*otherplayer.Cells[index].x = xx;
 						otherplayer.Cells[index].y = yy;*/
 						//_cells[index].x = xx;
 						//_cells[index].y = yy;
 					}
 				}
-				
+
 			}
-			
+
 			// получение позиции всех отщепенцев в текущий момент времени
 			if (m.type == "childMove") {
-				
+
 				for (var i: int = 0; i < m.length; i += 3) {
 
 					var index = m.getString(i);
@@ -388,14 +492,14 @@
 					/*_throws[index-1].x = xx;
 					_throws[index-1].y = yy;*/
 				}
-					
+
 			}
-			
+
 			// обработчик события появления новой клетки у игрока (т.е. либо он нажал пробел, либо столкнулся с вирусом)
 			if (m.type == "newCell") {
-				
-				if (m.getString(0)==userID) {
-					var newcell: Cell = new Cell();
+
+				/*if (m.getString(0) == userID) {
+					//var newcell: Cell = new Cell();
 					newcell.CellNumber = m.getInt(1);
 					currentPlayer.AddCell(newcell);
 					newcell.SetColor(currentPlayer.Cells[0].CellColor);
@@ -409,22 +513,22 @@
 					otherPlayer.AddCell(newcell);
 					newcell.SetColor(otherPlayer.Cells[0].CellColor);
 					_display.addChild(newcell);
-				}
-				
+				}*/
+
 			}
-			
+
 			// обработчик события появления нового отщепенца, т.е. когда игрок нажал на "w"
-			if (m.type == "newThrow") {
-				
+			/*if (m.type == "newThrow") {
+
 				var curPlayer: Player;
-				if (m.getString(0)==userID) {
+				if (m.getString(0) == userID) {
 					curPlayer = currentPlayer;
 				} else {
 					curPlayer = findPlayerById(m.getString(0));
 				}
-				
+
 				if (curPlayer == null) return;
-				
+
 				var newthrow: CellChild = new CellChild();
 				newthrow.x = curPlayer.Cells[0].x;
 				newthrow.y = curPlayer.Cells[0].y;
@@ -432,19 +536,19 @@
 				newthrow.name = "throw" + m.getString(1);
 				_display.addChild(newthrow);
 				_throws.push(newthrow);
-				
+
 			}
-			
+*/
 			// появление нового вируса
 			if (m.type == "updateViruses") {
-				
+
 				for (var i: int = 0; i < m.length; i += 4) {
 
 					var index = m.getString(i);
 					var xx = m.getNumber(i + 1);
 					var yy = m.getNumber(i + 2);
 					var virrad = m.getNumber(i + 3);
-					
+
 					var virus = new VirusCell();
 					virus.x = xx;
 					virus.y = yy;
@@ -452,50 +556,50 @@
 					virus.SetSize(virrad);
 					_enviroment.addChild(virus);
 					_viruses.push(virus);
-					
+
 					//trace(virus.x, virus.y, virus.name);
 
 				}
 			}
-			
+
 			// удаление вируса
 			if (m.type == "removeVirus") {
 				removeChildWithRef("virus" + m.getString(0), _enviroment);
 			}
-			
+
 			// изменить размер вируса
 			if (m.type == "resizeVirus") {
 				var virus = findVirusByName("virus" + m.getString(0));
 				virus.SetSize(m.getInt(1));
 			}
-			
-			//получить всех игроков комнаты
+
+			/*	//получить всех игроков комнаты
 			if (m.type == "playersList") {
 				for (var i: int = 0; i < m.length; i++) {
 					var newPlayer = new Player(m.getString(i));
-					var celNum: uint = m.getNumber(i+1);
-					for (var j: uint = 0; j < 2*celNum; j++ ) {
+					var celNum: uint = m.getNumber(i + 1);
+					for (var j: uint = 0; j < 2 * celNum; j++) {
 						if (j != 0) newPlayer.AddCell(new Cell());
 						newPlayer.Cells[j].SetColor(newPlayer.Cells[0].CellColor);
-						newPlayer.Cells[j].CellNumber = (m.getNumber(i+2+j));
-						newPlayer.Cells[j].SetSize(m.getNumber(i+3+j));
+						newPlayer.Cells[j].CellNumber = (m.getNumber(i + 2 + j));
+						newPlayer.Cells[j].SetSize(m.getNumber(i + 3 + j));
 						_display.addChild(newPlayer.Cells[j]);
 					}
-					i = i + 1 + 2*celNum;
+					i = i + 1 + 2 * celNum;
 					if (newPlayer.Id != userID) players.push(newPlayer);
 				}
 				trace("playerList");
 			}
-			
+*/
 			if (m.type == "removeCell") {
 				var cplayer: Player;
-				
+
 				if (m.getString(0) != userID) {
-						cplayer = findPlayerById(m.getString(0));
+					cplayer = findPlayerById(m.getString(0));
 				} else {
-						cplayer = currentPlayer;
-				}				
-				
+					cplayer = currentPlayer;
+				}
+
 				//trace(cplayer.Cells[1].CellNumber, cplayer.Cells[2].CellNumber, cplayer.Cells[3].CellNumber, "<-----");
 				if (cplayer != null) {
 					var cellForRemove = cplayer.FindCellByNumber(m.getInt(1));
@@ -503,64 +607,63 @@
 					if (cellForRemove != null) _display.removeChild(cellForRemove);
 				}
 			}
-			
+
 			if (m.type == "resizeCell") {
 				var cplayer: Player;
 				if (m.getString(0) != userID) {
-						cplayer = findPlayerById(m.getString(0));
+					cplayer = findPlayerById(m.getString(0));
 				} else {
-						cplayer = currentPlayer;
-				}				
+					cplayer = currentPlayer;
+				}
 				if (cplayer != null) {
 					var cellForResize = cplayer.FindCellByNumber(m.getInt(1));
 					if (cellForResize != null) cellForResize.SetSize(m.getNumber(2));
 				}
 			}
-			
+
 			// получение позиции данного вируса в текущий момент
 			if (m.type == "virusMove") {
-				
+
 				var index = m.getString(0);
 				var xx = m.getNumber(1);
 				var yy = m.getNumber(2);
-				
-				var curVirus = findVirusByName("virus"+index);
-				
-				if (curVirus != null) 
-				{
+
+				var curVirus = findVirusByName("virus" + index);
+
+				if (curVirus != null) {
 					curVirus.x = xx;
 					curVirus.y = yy;
 				}
-					
+
 			}
-			
+			/*
 			if (m.type == "saying") {
 				var cplayer: Player;
 				if (m.getString(0) != userID) {
-						cplayer = findPlayerById(m.getString(0));
+					cplayer = findPlayerById(m.getString(0));
 				} else {
-						cplayer = currentPlayer;
-				}				
+					cplayer = currentPlayer;
+				}
 				if (cplayer != null) {
 					cplayer.Cells[0].SetMessage(m.getString(1));
-					
+
 					if (cplayer.MessageTimer.running) {
-							cplayer.MessageTimer.reset();
-						} else {
-							cplayer.MessageTimer.start();
-						}						
-					
-				}	
-			}
+						cplayer.MessageTimer.reset();
+					} else {
+						cplayer.MessageTimer.start();
+					}
+
+				}
+			}*/
 		}
 
-		
-		
+
+
 		/**
 		 * @private
 		 */
 		private function handleError(error: PlayerIOError): void {
-			
+
 		}
 
 	}

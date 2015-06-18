@@ -8,7 +8,8 @@
 	import flash.display.BitmapData;
 	import flash.geom.Matrix;
 
-	public class Cell extends Sprite {
+	public class Feed extends Sprite {
+
 		private var _size: Number;
 		private var _points: Array = new Array();
 		private var rounderObject: Shape = null;
@@ -16,70 +17,61 @@
 		public var m: Matrix = new Matrix();
 		public var bmp: BitmapData;
 		public var buf: Shape = new Shape();
-		private var _name: CellName;
 
 		public function size() {
 			return _size;
 		}
-		public function Cell(_x: Number, _y: Number, size: Number, color: Number = 0x0000FF, _isVir: Boolean = false) {
+		public function Feed(_x: Number, _y: Number, id: int) {
 			this.x = _x;
 			this.y = _y;
-			this._size = size;
+			this._size = 3;
+			var size:Number = 3;
+			switch(id){
+			case 0:
+				this.color = 0xFF3333;	
+				break;
+			case 1:
+				this.color = 0x0033FF;
+				break;
+			case 2:
+				this.color = 0xCC00CC;
+				break;
+			case 3:
+				this.color = 0x660066;
+				break;
+			case 4:
+				this.color = 0x0099FF;
+				break;
+			case 5:
+				this.color = 0xCC3333;
+				break;
+			case 6:
+				this.color = 0x996600;
+				break;
+			case 7:
+				this.color = 0x9933CC;
+				break;
+			case 8:
+				this.color = 0x66FF00;
+				break;
+			case 9:
+				this.color = 0xFFFF33;
+				break;
+		}
+			/*var k = 2 * Math.PI / Math.floor(Math.sqrt(20*_size));
+			for (var i: Number = 0; i < Math.floor(Math.sqrt(20*_size)); i++) {
+				_points.push(new CellPoint(_size * Math.sin(i * k), _size * Math.cos(i * k)));
+			}*/
+		
+			
 
-			this.color = _isVir ? 0x00FF00 : color;
-
-			var _thornCoeff: Number = 1;
-			var k = 2 * Math.PI / (2*Math.floor(Math.sqrt(10 * _size)));
-			for (var i: Number = 0; i < (2*Math.floor(Math.sqrt(10 * _size))); i++) {
-				_thornCoeff = (i % 2) && _isVir ? 0.8 : 1;
-				_points.push(new CellPoint(_size * Math.sin(i * k) * _thornCoeff, _size * Math.cos(i * k) * _thornCoeff));
-			}
 			rounderObject = new Shape();
 			bmp = new BitmapData(2 * size, 2 * size, true, 0);
 			m.translate(size, size);
+
 			addChild(rounderObject);
-			
-			if (!_isVir) {
-				_name = new CellName(size, String(color));
-				addChild(_name);
-			}
-			
 			draw();
 
-		}
-
-		public function hTest(a: Cell): Boolean {
-			var fin = true;
-
-			a.bmp.fillRect(bmp.rect, 0);
-			a.bmp.draw(a.buf, a.m);
-			for (var i: Number = 0; i < _points.length; i++) {
-				if (_points[i].size() > 0.4)
-					if (a.bmp.hitTest(new Point(a.x - a.size(), a.y - a.size()), 0xFF, new Point(_points[i].sx() + this.x, _points[i].sy() + this.y))) {
-						_points[i].decreaseSize();
-						fin = false;
-					}
-					/*else{
-					if(_points[i].size() < 0.99) 
-						_points[i].increaseSize();
-				}*/
-			}
-			return fin;
-		}
-
-		public function recovery(a: Cell) {
-			var fin = true;
-			bmp.fillRect(bmp.rect, 0);
-			bmp.draw(a.buf, a.m);
-			for (var i: Number = 0; i < _points.length; i++) {
-				if (_points[i].size() < 0.99)
-					if (!a.bmp.hitTest(new Point(a.x - a.size(), a.y - a.size()), 0xFF, new Point(_points[i].ssx(10) + this.x, _points[i].ssy(10) + this.y))) {
-						_points[i].increaseSize();
-						fin = false;
-					}
-
-			}
-			return fin;
 		}
 
 		public function smooth() {
@@ -89,16 +81,17 @@
 		}
 
 		public function draw() {
-			drawToBuf();
+			//drawToBuf();
 			rounderObject.graphics.clear();
 
 			rounderObject.graphics.beginFill(color);
-			rounderObject.graphics.lineStyle(_size*0.2, color + 0x006600);
-			rounderObject.graphics.moveTo(_points[0].sx(), _points[0].sy());
+			rounderObject.graphics.lineStyle(1, color + 0x001100);
+			/*rounderObject.graphics.moveTo(_points[0].sx(), _points[0].sy());
 
-			for (var i: Number = 0; i < (2*Math.floor(Math.sqrt(10 * _size))); i++) {
+			for (var i: Number = 0; i < Math.floor(Math.sqrt(20 * _size)); i++) {
 				rounderObject.graphics.lineTo(_points[i].sx(), _points[i].sy());
-			}
+			}*/
+			rounderObject.graphics.drawCircle(0,0,_size);
 		}
 
 		public function drawToBuf() {
@@ -108,7 +101,7 @@
 			buf.graphics.lineStyle(10, color + 0x006600);
 			buf.graphics.moveTo(_points[0].sx(), _points[0].sy());
 
-			for (var i: Number = 0; i < (2*Math.floor(Math.sqrt(10 * _size))); i++) {
+			for (var i: Number = 0; i < Math.floor(Math.sqrt(20 * _size)); i++) {
 				buf.graphics.lineTo(_points[i].sx(), _points[i].sy());
 			}
 		}
