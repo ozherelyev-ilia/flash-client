@@ -8,19 +8,12 @@
 	import flash.display.BitmapData;
 	import flash.geom.Matrix;
 
-	public class Cell extends Sprite {
-		private var _size: Number;
+	public class Cell extends Body {
+		
 		private var _points: Array = new Array();
-		private var rounderObject: Shape = null;
 		private var color: Number;
-		public var m: Matrix = new Matrix();
-		public var bmp: BitmapData;
-		public var buf: Shape = new Shape();
 		private var _name: CellName;
 
-		public function size() {
-			return _size;
-		}
 		public function Cell(_x: Number, _y: Number, size: Number, color: Number = 0x0000FF, _isVir: Boolean = false) {
 			this.x = _x;
 			this.y = _y;
@@ -49,7 +42,7 @@
 
 		}
 
-		public function hTest(a: Cell): Boolean {
+		public function hTest(a: Body): Boolean {
 			var fin = true;
 
 			a.bmp.fillRect(bmp.rect, 0);

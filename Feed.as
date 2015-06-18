@@ -1,6 +1,5 @@
 ﻿package {
 	import flash.geom.Point;
-	import flash.display.Sprite;
 	import flash.display.Shape;
 	import fl.motion.Color;
 	import flash.events.Event;
@@ -8,19 +7,12 @@
 	import flash.display.BitmapData;
 	import flash.geom.Matrix;
 
-	public class Feed extends Cell {
+	public class Feed extends Body {
 
-		private var _size: Number;
-		private var _points: Array = new Array();
-		private var rounderObject: Shape = null;
+		
 		private var color: Number;
-		public var m: Matrix = new Matrix();
-		public var bmp: BitmapData;
-		public var buf: Shape = new Shape();
+		private var _points: Array = new Array();
 
-		public function size() {
-			return _size;
-		}
 		public function Feed(_x: Number, _y: Number, id: int) {
 			this.x = _x;
 			this.y = _y;
@@ -76,12 +68,6 @@
 
 		}
 
-		public function smooth() {
-			for (var i: Number = 0; i < _points.length; i++) {
-				_points[i].setSize((_points[(i + _points.length - 1) % _points.length].size() + _points[(i + _points.length - 2) % _points.length].size() + _points[(i + 1) % _points.length].size() + _points[(i + 2) % _points.length].size() + 4 * _points[i].size()) / 8);
-			}
-		}
-
 		public function draw() {
 			//drawToBuf();
 			rounderObject.graphics.clear();
@@ -106,21 +92,6 @@
 			for (var i: Number = 0; i < Math.floor(Math.sqrt(20 * _size)); i++) {
 				buf.graphics.lineTo(_points[i].sx(), _points[i].sy());
 			}
-		}
-
-		public function isDragable(): void {
-			addEventListener(MouseEvent.MOUSE_DOWN, mouseDownHandler);
-			addEventListener(MouseEvent.MOUSE_UP, mouseReleasedHandler);
-		}
-
-		function mouseDownHandler(e: MouseEvent): void {
-			this.y += 25;
-			startDrag();
-		}
-
-		//Эта функция вызывается, когда пользователь отпускает мышь
-		function mouseReleasedHandler(e: MouseEvent): void {
-			stopDrag();
 		}
 
 	}
