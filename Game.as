@@ -39,7 +39,9 @@
 		private var _viruses: Vector.<VirusCell> = new Vector.<VirusCell> (); // Список вирусов
 		private var _feed: Vector.<Vector.<Feed>> = new Vector.<Vector.<Feed>> ();
 		private var _feedPtr: Vector.<int> = new Vector.<int> ();
-
+		private var renderedCells:Object = new Object();
+		private var waitingCells:Object = new Object();
+		
 		private var isMouseDown: Boolean = false;
 		private var messageString: String = "";
 
@@ -238,7 +240,7 @@
 				var id = m.getInt(i);
 				var _x = (m.getNumber(i + 1)-curX + xArea/2)/xArea*640;
 				var _y = (m.getNumber(i + 2)-curY + yArea/2)/yArea*360;
-				var size = m.getNumber(i + 3);
+				var size = 3*m.getNumber(i + 3);
 				if (id < 10) {
 					var feed: Feed;
 					if (_feedPtr[id] == _feed[id].length) {
@@ -255,13 +257,24 @@
 					var virus: Cell = new Cell(_x, _y, size, 0x00FF00, true);
 					addChild(virus);
 				} else if (id > 1000) {
-					var cell: Cell = new Cell(_x,
+					var cell:Cell = waitingCells[String(id)]
+					if (cell == undefined){
+					 cell = new Cell(_x,
 						_y,
 						size,
-						id * 28 % 256);
+						id);
+					} else {
+						cell.x = _x;
+						cell.y = _y;
+						//cell.height = size*2;
+						//cell.width = size*2;
+					}
+					renderedCells[String(id)] = cell;
 					this.addChild(cell);
 				}
 			}
+			waitingCells = renderedCells;
+			renderedCells = new Object();
 		}
 		//В сообщении передается массив в котором последовательно идут: 1) айди объекта, 2) X, 3) Y, 4) радиус, далее айди следующего объекта и т.д. 
 		//Айди следующие: 

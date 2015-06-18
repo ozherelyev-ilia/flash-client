@@ -8,7 +8,7 @@
 	import flash.display.BitmapData;
 	import flash.geom.Matrix;
 
-	public class Feed extends Sprite {
+	public class Feed extends Cell {
 
 		private var _size: Number;
 		private var _points: Array = new Array();
@@ -70,6 +70,8 @@
 			m.translate(size, size);
 
 			addChild(rounderObject);
+		
+			this.cacheAsBitmap = true;
 			draw();
 
 		}

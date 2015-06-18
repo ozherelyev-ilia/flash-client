@@ -44,6 +44,7 @@
 				addChild(_name);
 			}
 			
+			this.cacheAsBitmap = true;
 			draw();
 
 		}
