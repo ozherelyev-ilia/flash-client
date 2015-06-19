@@ -21,7 +21,7 @@
 		public function size() {
 			return _size;
 		}
-		public function Cell(_x: Number, _y: Number, size: Number, color: Number = 0x0000FF, _isVir: Boolean = false) {
+		public function Cell(_x: Number, _y: Number, size: Number, color: Number = 0x0000FF, _isVir: Boolean = false, nd: Boolean = true) {
 			this.x = _x;
 			this.y = _y;
 			this._size = size;
@@ -39,7 +39,7 @@
 			m.translate(size, size);
 			addChild(rounderObject);
 			
-			if (!_isVir) {
+			if (!_isVir && nd) {
 				_name = new CellName(size, String(color));
 				addChild(_name);
 			}

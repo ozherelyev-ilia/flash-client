@@ -54,6 +54,8 @@
 		private var yArea:int = 214;
 		
 		private var fsu:int = 0;
+		
+		private var menu:Menu;
 		//---------------------------------------
 		// CONSTRUCTOR
 		//---------------------------------------
@@ -118,7 +120,7 @@
 
 		}
 
-		private function init(event: Event): void {
+private function init(event: Event): void {
 			if (event != null) {
 				removeEventListener(Event.ADDED_TO_STAGE, init);
 			}
@@ -143,8 +145,30 @@
 			// userID - ID текущего игрока, запустившего данное приложение 
 			// handleConnect - обработчик успешного соединения с сервером
 			// handleError - обработчик ошибки соединения
+			
+			menu = new Menu(this);
+			
+			menu.x = (xArea/2)/xArea*640;
+			menu.y = (yArea/2)/yArea*360;
+			menu.width = 200;
+			menu.height = 300;
+			addChild(menu);
+			//goPlay();
+		}
+		
+		public function goPlay():void{
 			PlayerIO.connect(stage, gameID, "public", userID, "", null, handleConnect, handleError);
 		}
+		
+		private function playerDead(m: Message):void{
+			connection.removeMessageHandler("mouseRequest", sendMouseXY);
+			connection.removeMessageHandler("currentState", playerDead);
+			connection.removeMessageHandler("playerDead", playerDead);
+			connection.disconnect();
+			//this.stopAllMovieClips();
+			//menu.startNew();
+		}
+
 
 		/**
 		 * @private
@@ -204,7 +228,7 @@
 
 			connection.addMessageHandler("currentState", update);
 			//this.connection.addMessageHandler("*", messageHandler); // Добавление обработчика прочих сообщений
-
+			connection.addMessageHandler("playerDead", playerDead);
 			addEventListener(Event.ENTER_FRAME, onEnterFrame);
 		}
 
@@ -218,8 +242,8 @@
 				fsu--;
 				drawWorld(msg);
 			}
-			addChild(ping);
-			ping.text = String(fsu);
+			//addChild(ping);
+			//ping.text = String(fsu);
 		}
 		
 		private function drawWorld(m:Message){
@@ -258,7 +282,7 @@
 					var cell: Cell = new Cell(_x,
 						_y,
 						size,
-						id * 28 % 256);
+						id);
 					this.addChild(cell);
 				}
 			}
