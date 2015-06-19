@@ -37,7 +37,7 @@
 			_size -= n;
 		}
 
-		public function increaseSize(n: Number = 0.01): void {
+		public function increaseSize(n: Number = 0.05): void {
 			_size += n;
 		}
 

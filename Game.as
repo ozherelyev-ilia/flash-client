@@ -244,8 +244,10 @@
 			var ya:Number = yArea/2 - curY;
 			for (i = 0; i < m.length; i += 4) {
 				var id = m.getInt(i);
-				var _x = (m.getNumber(i + 1) + xa)*xm;
-				var _y = (m.getNumber(i + 2) + ya)*ym;
+				var _gx = m.getNumber(i+1);
+				var _gy = m.getNumber(i+2);
+				var _x = (_gx + xa)*xm;
+				var _y = (_gy + ya)*ym;
 				var size = 3*m.getNumber(i + 3);
 				if (id < 10) {
 					var feed: Feed;
@@ -260,29 +262,33 @@
 					addChildAt(feed, 0);
 					_feedPtr[id] += 1;
 				} else if (id == 13) {
-					var virus: Cell = waitingCells[String(curX) + "x" +String(curY)];
+					var virus: Cell = waitingViruses[String(_gx) + "x" +String(_gy)];
 					if (virus == undefined){
 						virus = new Cell(_x, _y, size, 0x00FF00, true);
 					} else {
+						delete waitingViruses[String(_gx) + "x" +String(_gy)];
 						virus.x = _x;
 						virus.y = _y;
 					}
 					checkCollisions(virus,waitingCells);
 					checkCollisions(virus,renderedCells);
 					checkCollisions(virus, renderedViruses);
-					renderedViruses[String(curX) + "x" +String(curY)] = virus;
+					virus.recovery(waitingCells, waitingViruses, renderedCells, renderedViruses);
+					renderedViruses[String(_gx) + "x" +String(_gy)] = virus;
 					addChild(virus);
 				} else if (id > 1000) {
 					var cell:Cell = waitingCells[String(id)];
 					if (cell == undefined){
 					 cell = new Cell(_x,_y,size,id);
 					} else {
+						delete waitingCells[String(id)];
 						cell.x = _x;
 						cell.y = _y;
 						cell.height = size*2;
 						cell.width = size*2;
 					}
 					checkCollisions(cell, renderedCells);
+					cell.recovery(renderedViruses, renderedCells);
 					renderedCells[String(id)] = cell;
 					this.addChild(cell);
 				}
@@ -290,6 +296,7 @@
 			waitingCells = renderedCells;
 			waitingViruses = renderedViruses;
 			renderedCells = new Object();
+			renderedViruses = new Object();
 		}
 		public function checkCollisions(cell:Cell, cells:Object):void{
 			for each (var s:Cell in cells){

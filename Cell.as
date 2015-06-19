@@ -61,16 +61,21 @@
 			return fin;
 		}
 
-		public function recovery(a: Cell) {
+		public function recovery(...cells: Array) {
 			var fin = true;
-			bmp.fillRect(bmp.rect, 0);
-			bmp.draw(a.buf, a.m);
-			for (var i: Number = 0; i < _points.length; i++) {
-				if (_points[i].size() < 0.99)
-					if (!a.bmp.hitTest(new Point(a.x - a.size(), a.y - a.size()), 0xFF, new Point(_points[i].ssx(10) + this.x, _points[i].ssy(10) + this.y))) {
-						_points[i].increaseSize();
-						fin = false;
+			var l:uint = cells.length;
+			for (var c:uint = 0; c < l; c++){
+				for each(var a in cells[c]) {
+					a.bmp.fillRect(bmp.rect, 0);
+					a.bmp.draw(a.buf, a.m);
+					for (var i: Number = 0; i < _points.length; i++) {
+						if (_points[i].size() < 0.99)
+							if (!a.bmp.hitTest(new Point(a.x - a.size(), a.y - a.size()), 0xFF, new Point(_points[i].ssx(10) + this.x, _points[i].ssy(10) + this.y))) {
+								_points[i].increaseSize();
+								fin = false;
+							}
 					}
+				}
 
 			}
 			return fin;
