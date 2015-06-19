@@ -49,7 +49,7 @@
 			a.bmp.draw(a.buf, a.m);
 			for (var i: Number = 0; i < _points.length; i++) {
 				if (_points[i].size() > 0.4)
-					if (a.bmp.hitTest(new Point(a.x - a.size(), a.y - a.size()), 0xFF, new Point(_points[i].sx() + this.x, _points[i].sy() + this.y))) {
+					if (a.bmp.hitTest(new Point(a.x - a.size, a.y - a.size), 0xFF, new Point(_points[i].sx() + this.x, _points[i].sy() + this.y))) {
 						_points[i].decreaseSize();
 						fin = false;
 					}
@@ -70,7 +70,7 @@
 					a.bmp.draw(a.buf, a.m);
 					for (var i: Number = 0; i < _points.length; i++) {
 						if (_points[i].size() < 0.99)
-							if (!a.bmp.hitTest(new Point(a.x - a.size(), a.y - a.size()), 0xFF, new Point(_points[i].ssx(10) + this.x, _points[i].ssy(10) + this.y))) {
+							if (!a.bmp.hitTest(new Point(a.x - a.size, a.y - a.size), 0xFF, new Point(_points[i].ssx(10) + this.x, _points[i].ssy(10) + this.y))) {
 								_points[i].increaseSize();
 								fin = false;
 							}

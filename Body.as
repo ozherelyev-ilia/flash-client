@@ -12,8 +12,14 @@
 		public var m:Matrix = new Matrix();
 		public var buf: Shape = new Shape();
 
-		public function size() {
+		public function get size() {
 			return _size;
+		}
+		
+		public function set size(_size:Number){
+			this._size=_size;
+			rounderObject.height = _size*2;
+			rounderObject.width = _size*2;
 		}
 	}
 	

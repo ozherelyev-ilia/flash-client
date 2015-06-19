@@ -293,8 +293,7 @@ private function init(event: Event): void {
 						delete waitingVirAndPlasm[String(_gx) + "x" +String(_gy)];
 						plasm.x = _x;
 						plasm.y = _y;
-						plasm.height = size*2;
-						plasm.width = size*2;
+						plasm.size = size;
 					}
 					checkCollisions(plasm,waitingCells);
 					checkCollisions(plasm,renderedCells);
