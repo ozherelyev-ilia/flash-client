@@ -15,12 +15,19 @@ package
 		private var isFFA:int = 1;
 		private var themeNo:int = 1;
 		private var nickName:String = new String("");
+		private var game:Game;
 		
-		public function Menu() 
+		public function getShMass():int {return showMass;}
+		public function getShNick():int {return showNick;}
+		public function getShSkins():int {return showSkins;}
+		public function getIsFFA():int {return isFFA;}
+		public function getThemeNo():int {return themeNo;}
+		public function getNickName():String {return nickName;}
+		public function Menu(_game:Game)  
 		{
 			super();
 			this.stop();
-
+			game = _game;
 			startBtn.addEventListener(MouseEvent.CLICK, startBtnHandler); // frame 1 menu
 			settingsBtn.addEventListener(MouseEvent.CLICK, settingsBtnHandler); // frame 1 menu
 			helpBtn.addEventListener(MouseEvent.CLICK, helpBtnHandler); // frame 1 menu
@@ -67,6 +74,7 @@ package
 		{
 			gotoAndStop(4); // help
 			exitBtn4.addEventListener(MouseEvent.CLICK, exitBtnHandler); // frame 4
+			game.goPlay();
 		}
 
 		private function recordsBtnHandler(e: MouseEvent): void 
@@ -75,7 +83,7 @@ package
 			exitBtn5.addEventListener(MouseEvent.CLICK, exitBtnHandler); // frame 5
 		}
 
-		private function exitBtnHandler(e: MouseEvent): void 
+		public function exitBtnHandler(e: MouseEvent): void 
 		{
 			gotoAndStop(1); // menu
 			startBtn.addEventListener(MouseEvent.CLICK, startBtnHandler); // frame 1 menu
@@ -91,6 +99,16 @@ package
 			showMass = int(showMassChb.selected);
 			showNick = int(showNickChb.selected);
 			showSkins = int(showSkinsChb.selected);
+			gotoAndStop(1); // menu
+			startBtn.addEventListener(MouseEvent.CLICK, startBtnHandler); // frame 1 menu
+			settingsBtn.addEventListener(MouseEvent.CLICK, settingsBtnHandler); // frame 1 menu
+			helpBtn.addEventListener(MouseEvent.CLICK, helpBtnHandler); // frame 1 menu
+			recordsBtn.addEventListener(MouseEvent.CLICK, recordsBtnHandler); // frame 1 menu
+		}
+		
+		public function startNew(): void 
+		{
+			game.addChild(this);
 			gotoAndStop(1); // menu
 			startBtn.addEventListener(MouseEvent.CLICK, startBtnHandler); // frame 1 menu
 			settingsBtn.addEventListener(MouseEvent.CLICK, settingsBtnHandler); // frame 1 menu
