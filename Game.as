@@ -41,8 +41,8 @@
 		private var _feedPtr: Vector.<int> = new Vector.<int> ();
 		private var renderedCells:Object = new Object();
 		private var waitingCells:Object = new Object();
-		private var renderedViruses:Object = new Object();
-		private var waitingViruses:Object = new Object();
+		private var rendererVirAndPlasm:Object = new Object();
+		private var waitingVirAndPlasm:Object = new Object();
 		
 		private var isMouseDown: Boolean = false;
 		private var messageString: String = "";
@@ -116,7 +116,7 @@
 			if (!isMouseDown) {
 				if (connection != null) {
 					if (e.keyCode == 32) connection.send("split"); //отправка на сервер сообщения о нажатии пробела
-					if (e.keyCode == 87) connection.send("throwpart", _display.mouseX, _display.mouseY); // отправка на сервер сообщения о нажатии на "w"
+					if (e.keyCode == 87) connection.send("throwpart", lastX+(_display.mouseX-360)/640*xArea, lastY+(_display.mouseY-180)/360*yArea); // отправка на сервер сообщения о нажатии на "w"
 				}
 			} else {
 				if (messageString.length < 50) messageString += String.fromCharCode(e.charCode);
@@ -285,20 +285,37 @@ private function init(event: Event): void {
 					}
 					addChildAt(feed, 0);
 					_feedPtr[id] += 1;
-				} else if (id == 13) {
-					var virus: Cell = waitingViruses[String(_gx) + "x" +String(_gy)];
+				} else if(id == 11){
+					var plasm: Cell = waitingVirAndPlasm[String(_gx) + "x" +String(_gy)];
+					if (plasm == undefined){
+						plasm = new Protoplasm(_x, _y, size, 0x00FF00);
+					} else {
+						delete waitingVirAndPlasm[String(_gx) + "x" +String(_gy)];
+						plasm.x = _x;
+						plasm.y = _y;
+						plasm.height = size*2;
+						plasm.width = size*2;
+					}
+					checkCollisions(plasm,waitingCells);
+					checkCollisions(plasm,renderedCells);
+					checkCollisions(plasm, rendererVirAndPlasm);
+					plasm.recovery(waitingCells, waitingVirAndPlasm, renderedCells, rendererVirAndPlasm);
+					rendererVirAndPlasm[String(_gx) + "x" +String(_gy)] = plasm;
+					addChild(plasm);
+				}else if (id == 13) {
+					var virus: Cell = waitingVirAndPlasm[String(_gx) + "x" +String(_gy)];
 					if (virus == undefined){
 						virus = new Cell(_x, _y, size, 0x00FF00, true);
 					} else {
-						delete waitingViruses[String(_gx) + "x" +String(_gy)];
+						delete waitingVirAndPlasm[String(_gx) + "x" +String(_gy)];
 						virus.x = _x;
 						virus.y = _y;
 					}
 					checkCollisions(virus,waitingCells);
 					checkCollisions(virus,renderedCells);
-					checkCollisions(virus, renderedViruses);
-					virus.recovery(waitingCells, waitingViruses, renderedCells, renderedViruses);
-					renderedViruses[String(_gx) + "x" +String(_gy)] = virus;
+					checkCollisions(virus, rendererVirAndPlasm);
+					virus.recovery(waitingCells, waitingVirAndPlasm, renderedCells, rendererVirAndPlasm);
+					rendererVirAndPlasm[String(_gx) + "x" +String(_gy)] = virus;
 					addChild(virus);
 				} else if (id > 1000) {
 					var cell:Cell = waitingCells[String(id)];
@@ -312,15 +329,15 @@ private function init(event: Event): void {
 						cell.width = size*2;
 					}
 					checkCollisions(cell, renderedCells);
-					cell.recovery(renderedViruses, renderedCells);
+					cell.recovery(rendererVirAndPlasm, renderedCells);
 					renderedCells[String(id)] = cell;
 					this.addChild(cell);
 				}
 			}
 			waitingCells = renderedCells;
-			waitingViruses = renderedViruses;
+			waitingVirAndPlasm = rendererVirAndPlasm;
 			renderedCells = new Object();
-			renderedViruses = new Object();
+			rendererVirAndPlasm = new Object();
 		}
 		public function checkCollisions(cell:Cell, cells:Object):void{
 			for each (var s:Cell in cells){

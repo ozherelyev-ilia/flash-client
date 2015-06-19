@@ -75,6 +75,7 @@ package
 			gotoAndStop(4); // help
 			exitBtn4.addEventListener(MouseEvent.CLICK, exitBtnHandler); // frame 4
 			game.goPlay();
+			stage.focus = game;
 		}
 
 		private function recordsBtnHandler(e: MouseEvent): void 

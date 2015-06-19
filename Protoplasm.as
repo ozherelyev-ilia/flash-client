@@ -9,13 +9,8 @@
 	import flash.geom.Matrix;
 
 	public class Protoplasm extends Cell{
-		private var _size: Number;
 		private var _points: Array = new Array();
-		private var rounderObject: Shape = null;
 		private var color: Number;
-		//public var m: Matrix = new Matrix();
-		//public var bmp: BitmapData;
-		//public var buf: Shape = new Shape();
 		private var _name: CellName;
 
 		public function Protoplasm(_x: Number, _y: Number, size: Number, color: Number = 0x0000FF) {
