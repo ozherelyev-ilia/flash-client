@@ -14,7 +14,6 @@
 	import flash.events.KeyboardEvent;
 	import flash.utils.getTimer;
 	import flash.utils.Timer;
-	import flash.display.MovieClip;
 	import flash.text.TextField;
 	import flash.text.TextFormat;
 	import flash.text.TextFieldType;
@@ -101,6 +100,7 @@
 			stage.addEventListener(KeyboardEvent.KEY_DOWN, displayKeyDown);
 			
 			bckg = new Grid_mc();
+			bckg.cacheAsBitmap = true;
 			addChildAt(bckg,0);
 			addChildAt(world,1);
 			addChildAt(msgBox,2);

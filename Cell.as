@@ -62,7 +62,7 @@
 			a.bmp.fillRect(bmp.rect, 0);
 			a.bmp.draw(a.buf, a.m);
 			for (var i: Number = 0; i < pointsCount; i++) {
-				if (_points[i].size() > 0.4)
+				if (_points[i].size() > 0.2)
 					if (a.bmp.hitTest(new Point(a.x - a.csize, a.y - a.csize), 0xFF, new Point(_points[i].sx() + this.x, _points[i].sy() + this.y))) {
 						_points[i].decreaseSize();
 						fin = false;
@@ -120,8 +120,7 @@
 			buf.graphics.lineStyle(10, color + 0x006600);
 			buf.graphics.moveTo(_points[0].sx(), _points[0].sy());
 
-			var count:uint = _points.length;
-			for (var i: Number = 0; i < count; i++) {
+			for (var i: Number = 0; i < pointsCount; i++) {
 				buf.graphics.lineTo(_points[i].sx(), _points[i].sy());
 			}
 
