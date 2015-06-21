@@ -13,8 +13,9 @@
 		private var _points: Array = new Array();
 		private var color: Number;
 		private var _name: CellName;
+		private var _mass: CellName;
 
-		public function Cell(_x: Number, _y: Number, size: Number, color: Number = 0x0000FF, _isVir: Boolean = false, nd: Boolean = true) {
+		public function Cell(_x: Number, _y: Number, size: Number, color: Number = 0x0000FF, _isVir: Boolean = false, nd: Boolean = true, md: Boolean = true) {
 			this.x = _x;
 			this.y = _y;
 			this._size = size;
@@ -34,7 +35,18 @@
 			
 			if (!_isVir && nd) {
 				_name = new CellName(size, String(color));
+				if (md){
+					var textH:Number = _name.getTH();
+					_name.setY(-textH/2 - 2.5)
+				}
 				addChild(_name);
+			}
+			
+			if (!_isVir && md) {
+				_mass = new CellName(size, String(Math.round(size)));
+				var textHm:Number = _mass.getTH();
+					_mass.setY(textHm/4 + 2.5)
+				addChild(_mass);
 			}
 			
 			this.cacheAsBitmap = true;
@@ -49,7 +61,7 @@
 			a.bmp.draw(a.buf, a.m);
 			for (var i: Number = 0; i < _points.length; i++) {
 				if (_points[i].size() > 0.4)
-					if (a.bmp.hitTest(new Point(a.x - a.size(), a.y - a.size()), 0xFF, new Point(_points[i].sx() + this.x, _points[i].sy() + this.y))) {
+					if (a.bmp.hitTest(new Point(a.x - a.size, a.y - a.size), 0xFF, new Point(_points[i].sx() + this.x, _points[i].sy() + this.y))) {
 						_points[i].decreaseSize();
 						fin = false;
 					}
@@ -70,7 +82,7 @@
 					a.bmp.draw(a.buf, a.m);
 					for (var i: Number = 0; i < _points.length; i++) {
 						if (_points[i].size() < 0.99)
-							if (!a.bmp.hitTest(new Point(a.x - a.size(), a.y - a.size()), 0xFF, new Point(_points[i].ssx(10) + this.x, _points[i].ssy(10) + this.y))) {
+							if (!a.bmp.hitTest(new Point(a.x - a.size, a.y - a.size), 0xFF, new Point(_points[i].ssx(10) + this.x, _points[i].ssy(10) + this.y))) {
 								_points[i].increaseSize();
 								fin = false;
 							}

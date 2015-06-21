@@ -14,11 +14,23 @@
 		private var _size: Number;
 		private var bmp:Bitmap;
 		private var shadow: GlowFilter = new GlowFilter(0, 1.0, 4, 4, 60, 1);
-
+		
 		public function size() {
 			return _size;
 		}
-
+		
+		public function getTH(): Number{
+			return textField.textHeight;
+		}
+		
+		public function setX(_x: Number): void{
+			bmp.x = _x;
+		}
+			
+		
+		public function setY(_y: Number): void{
+			bmp.y = _y;
+		}
 		public function CellName(_size: Number = 10.0, _text: String = "") {
 			super();
 			this._size = _size;
