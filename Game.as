@@ -97,10 +97,6 @@
 			(stage == null) ? addEventListener(Event.ADDED_TO_STAGE, init) : init(null);
 			stage.addEventListener(MouseEvent.CLICK, mclick);
 			//stage.addEventListener(MouseEvent., msclick);
-			stage.addEventListener(MouseEvent.MOUSE_DOWN, buttonPressed);
-			stage.addEventListener(MouseEvent.MOUSE_UP, buttonReleased);
-
-			stage.addEventListener(KeyboardEvent.KEY_DOWN, displayKeyDown);
 			
 			bckg = new Grid_mc();
 			bckg.cacheAsBitmap = true;
@@ -274,6 +270,10 @@ private function init(event: Event): void {
 
 			if (connection != null) this.connection = connection;
 
+			stage.addEventListener(MouseEvent.MOUSE_DOWN, buttonPressed);
+			stage.addEventListener(MouseEvent.MOUSE_UP, buttonReleased);
+
+			stage.addEventListener(KeyboardEvent.KEY_DOWN, displayKeyDown);
 			/*connection.addMessageHandler("eatenPoints", gotEatenPoints); // Добавление обработчика сообщения о съеденных точках кормежки
 			connection.addMessageHandler("eatenThrows", gotEatenThrows); // Добавление обработчика сообщения о съеденных отщепенцев клеток
 			connection.addMessageHandler("updateNutrits", gotNuts); // Добавление обработчика сообщения с новыми точками кормежки
