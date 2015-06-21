@@ -74,6 +74,13 @@
 			}
 			return fin;
 		}
+		
+		public override function set csize(_size:Number){
+			this._size=_size;
+			rounderObject.height = _size*2;
+			rounderObject.width = _size*2;
+			_name.setSize(_size);
+		}
 
 		public function recovery(...cells: Array) {
 			var fin = true;

@@ -49,6 +49,7 @@
 
 		public function setSize(size: Number): void {
 			removeChildren();
+			_size = size;
 			var nameLength: int = Math.max(Math.floor(1.6 * _size), 20 * this.textField.text.length);
 			this.textField.width = nameLength;
 			this.format1.size = Math.floor(nameLength / Number(textField.text.length));
