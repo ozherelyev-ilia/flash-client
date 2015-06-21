@@ -372,7 +372,7 @@ private function init(event: Event): void {
 				} else if (id > 1000) {
 					var cell:Cell = waitingCells[String(id)];
 					if (cell == undefined){
-					 cell = new Cell(_x,_y,size,id);
+					 cell = new Cell(_x,_y,size,id,false,showNick,showMass);
 					} else {
 						delete waitingCells[String(id)];
 						cell.x = _x;
