@@ -98,7 +98,7 @@
 			stage.addEventListener(MouseEvent.CLICK, mclick);
 			//stage.addEventListener(MouseEvent., msclick);
 			
-			bckg = new Grid_mc();
+			bckg = new Grid();
 			bckg.cacheAsBitmap = true;
 			addChildAt(bckg,0);
 			addChildAt(world,1);
@@ -196,8 +196,8 @@ private function init(event: Event): void {
 			
 			menu = new Menu(this);
 			
-			menu.x = (xArea/2)/xArea*640;
-			menu.y = (yArea/2)/yArea*360;
+			menu.x = (xArea/2)/xArea*stage.stageWidth;
+			menu.y = (yArea/2)/yArea*stage.stageHeight;
 			menu.width = 200;
 			menu.height = 300;
 			addChild(menu);
@@ -257,7 +257,7 @@ private function init(event: Event): void {
 		// срабатывает как ответ на запрос "mouseRequest" с сервера, который поступает каждые 30 мс
 		function sendMouseXY(m: Message) {
 			if (connection != null) {
-				connection.send("currentMouse", lastX+(_display.mouseX-360)/640*xArea, lastY+(_display.mouseY-180)/360*yArea);
+				connection.send("currentMouse", lastX+(_display.mouseX-stage.stageWidth/2)/stage.stageWidth*xArea, lastY+(_display.mouseY-stage.stageHeight/2)/stage.stageHeight*yArea);
 			}
 			//trace("mouse");
 
@@ -330,8 +330,8 @@ private function init(event: Event): void {
 			var curY: Number = m.getNumber(1);
 			lastX = curX;
 			lastY = curY;
-			var xm:Number = 640/xArea;
-			var ym:Number = 360/yArea;
+			var xm:Number = stage.stageWidth/xArea;
+			var ym:Number = stage.stageHeight/yArea;
 			bckg.x = -(curX*xm)%30;
 			bckg.y = -(curY*ym)%30;
 			for (var i: int = 0; i < 10; i++) {

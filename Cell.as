@@ -31,7 +31,7 @@
 				_points.push(new CellPoint(_size * Math.sin(i * k) * _thornCoeff, _size * Math.cos(i * k) * _thornCoeff));
 			}
 			rounderObject = new Shape();
-			bmp = new BitmapData(2 * size, 2 * size, true, 0);
+			bmp = new BitmapData(4*size,4*size, true, 0);
 			m.translate(size, size);
 			addChild(rounderObject);
 			
@@ -59,7 +59,7 @@
 		public function hTest(a: Body): Boolean {
 			var fin = true;
 
-			a.bmp.fillRect(bmp.rect, 0);
+			a.bmp.fillRect(a.bmp.rect, 0);
 			a.bmp.draw(a.buf, a.m);
 			for (var i: Number = 0; i < pointsCount; i++) {
 				if (_points[i].size() > 0.2)
@@ -77,9 +77,12 @@
 		
 		public override function set csize(_size:Number){
 			this._size=_size;
-			rounderObject.height = _size*2;
-			rounderObject.width = _size*2;
+			rounderObject.height = _size;
+			rounderObject.width = _size;
 			_name.setSize(_size);
+			
+			if (2*_size > bmp.width)
+				bmp = new BitmapData(4*_size,4*_size, true, 0);
 		}
 
 		public function recovery(...cells: Array) {
@@ -87,7 +90,7 @@
 			var l:uint = cells.length;
 			for (var c:uint = 0; c < l; c++){
 				for each(var a in cells[c]) {
-					a.bmp.fillRect(bmp.rect, 0);
+					a.bmp.fillRect(a.bmp.rect, 0);
 					a.bmp.draw(a.buf, a.m);
 					for (var i: Number = 0; i < pointsCount; i++) {
 						if (_points[i].size() < 0.99)
