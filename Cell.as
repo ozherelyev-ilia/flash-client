@@ -13,8 +13,9 @@
 		protected var _points: Array = new Array();
 		protected var color: Number;
 		protected var _name: CellName;
+		private var _mass: CellName;
 
-		public function Cell(_x: Number, _y: Number, size: Number, color: Number = 0x0000FF, _isVir: Boolean = false, nd: Boolean = true) {
+		public function Cell(_x: Number, _y: Number, size: Number, color: Number = 0x0000FF, _isVir: Boolean = false, nd: Boolean = true, md: Boolean = true) {
 			this.x = _x;
 			this.y = _y;
 			this._size = size;
@@ -34,7 +35,18 @@
 			
 			if (!_isVir && nd) {
 				_name = new CellName(size, String(color));
+				if (md){
+					var textH:Number = _name.getTH();
+					_name.setY(-textH/2 - 2.5)
+				}
 				addChild(_name);
+			}
+			
+			if (!_isVir && md) {
+				_mass = new CellName(size, String(Math.round(size)));
+				var textHm:Number = _mass.getTH();
+					_mass.setY(textHm/4 + 2.5)
+				addChild(_mass);
 			}
 			
 			this.cacheAsBitmap = true;
