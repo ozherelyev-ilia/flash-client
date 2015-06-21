@@ -75,6 +75,9 @@
 		private var world:Sprite = new Sprite();
 		private var msgBox:ShortMessageBox = new ShortMessageBox();
 		private var menu:Menu;
+		
+		private var idArr = new Array();
+		private var nnArr = new Array();
 		//---------------------------------------
 		// CONSTRUCTOR
 		//---------------------------------------
@@ -285,6 +288,25 @@ private function init(event: Event): void {
 			connection.addMessageHandler("playerDead", playerDead);
 			addEventListener(Event.ENTER_FRAME, onEnterFrame);
 		}
+		
+		private function playersList(m: Message) {
+			idArr = new Array(Math.floor(m.length/2));
+			nnArr = new Array(Math.floor(m.length/2));
+			var k:int = 0;
+			for (var i: int = 0; i < m.length; i += 2)
+			{
+				idArr[k] = m.getInt(i);
+				nnArr[k] = m.getString(i+1);
+				k++;
+			}
+		}
+		
+		private function playerLeft(m: Message) {
+			var pid:int = m.getInt(0);
+			var k:int = idArr.indexOf(pid);
+			idArr.splice(k,1);
+			nnArr.splice(k,1);
+		}
 
 		private function onEnterFrame(e: Event) {
 			if(fsu!=0){
@@ -372,7 +394,7 @@ private function init(event: Event): void {
 				} else if (id > 1000) {
 					var cell:Cell = waitingCells[String(id)];
 					if (cell == undefined){
-					 cell = new Cell(_x,_y,size,id,false,showNick,showMass);
+					 cell = new Cell(_x,_y,size,nnArr[idArr.indexOf(int(id))],false,showNick,showMass);
 					} else {
 						delete waitingCells[String(id)];
 						cell.x = _x;
@@ -435,17 +457,6 @@ private function init(event: Event): void {
 		}
 
 		// уход одного из игроков
-		private function playerLeft(m: Message) {
-			// в сообщение ID ушедшего игрока
-
-			var player = findPlayerById(m.getString(0));
-
-			if (player != null) {
-				var ind: int = players.indexOf(player);
-				if (ind != -1) players.splice(ind, 1);
-			}
-
-		}
 
 		// функция удаления объектов со спрайтов по имени
 		function removeChildWithRef(childName: String, parentObj: * ) {
