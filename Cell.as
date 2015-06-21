@@ -11,6 +11,7 @@
 	public class Cell extends Body {
 		
 		protected var _points: Array = new Array();
+		protected var pointsCount: uint;
 		protected var color: Number;
 		protected var _name: CellName;
 		private var _mass: CellName;
@@ -23,8 +24,9 @@
 			this.color = _isVir ? 0x00FF00 : color;
 
 			var _thornCoeff: Number = 1;
-			var k = 2 * Math.PI / (2*Math.floor(Math.sqrt(10 * _size)));
-			for (var i: Number = 0; i < (2*Math.floor(Math.sqrt(10 * _size))); i++) {
+			pointsCount = 2*Math.floor(Math.sqrt(10 * _size));
+			var k = 2 * Math.PI / pointsCount;
+			for (var i: Number = 0; i < pointsCount; i++) {
 				_thornCoeff = (i % 2) && _isVir ? 0.8 : 1;
 				_points.push(new CellPoint(_size * Math.sin(i * k) * _thornCoeff, _size * Math.cos(i * k) * _thornCoeff));
 			}
@@ -59,7 +61,7 @@
 
 			a.bmp.fillRect(bmp.rect, 0);
 			a.bmp.draw(a.buf, a.m);
-			for (var i: Number = 0; i < _points.length; i++) {
+			for (var i: Number = 0; i < pointsCount; i++) {
 				if (_points[i].size() > 0.4)
 					if (a.bmp.hitTest(new Point(a.x - a.csize, a.y - a.csize), 0xFF, new Point(_points[i].sx() + this.x, _points[i].sy() + this.y))) {
 						_points[i].decreaseSize();
@@ -80,7 +82,7 @@
 				for each(var a in cells[c]) {
 					a.bmp.fillRect(bmp.rect, 0);
 					a.bmp.draw(a.buf, a.m);
-					for (var i: Number = 0; i < _points.length; i++) {
+					for (var i: Number = 0; i < pointsCount; i++) {
 						if (_points[i].size() < 0.99)
 							if (!a.bmp.hitTest(new Point(a.x - a.csize, a.y - a.csize), 0xFF, new Point(_points[i].ssx(10) + this.x, _points[i].ssy(10) + this.y))) {
 								_points[i].increaseSize();
@@ -94,8 +96,8 @@
 		}
 
 		public function smooth() {
-			for (var i: Number = 0; i < _points.length; i++) {
-				_points[i].setSize((_points[(i + _points.length - 1) % _points.length].size() + _points[(i + _points.length - 2) % _points.length].size() + _points[(i + 1) % _points.length].size() + _points[(i + 2) % _points.length].size() + 4 * _points[i].size()) / 8);
+			for (var i: Number = 0; i < pointsCount; i++) {
+				_points[i].setSize((_points[(i + pointsCount - 1) % pointsCount].size() + _points[(i + pointsCount - 2) % pointsCount].size() + _points[(i + 1) % pointsCount].size() + _points[(i + 2) % pointsCount].size() + 4 * _points[i].size()) / 8);
 			}
 		}
 
@@ -106,7 +108,7 @@
 			rounderObject.graphics.lineStyle(3, color + 0x006600);
 			rounderObject.graphics.moveTo(_points[0].sx(), _points[0].sy());
 
-			for (var i: Number = 0; i < (2*Math.floor(Math.sqrt(10 * _size))); i++) {
+			for (var i: Number = 0; i < pointsCount; i++) {
 				rounderObject.graphics.lineTo(_points[i].sx(), _points[i].sy());
 			}
 		}
@@ -118,7 +120,8 @@
 			buf.graphics.lineStyle(10, color + 0x006600);
 			buf.graphics.moveTo(_points[0].sx(), _points[0].sy());
 
-			for (var i: Number = 0; i < (2*Math.floor(Math.sqrt(10 * _size))); i++) {
+			var count:uint = _points.length;
+			for (var i: Number = 0; i < count; i++) {
 				buf.graphics.lineTo(_points[i].sx(), _points[i].sy());
 			}
 

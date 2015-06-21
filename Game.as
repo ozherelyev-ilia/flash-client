@@ -159,7 +159,7 @@
 			if (!isMouseDown) {
 				if (connection != null) {
 					if (e.keyCode == 32) connection.send("split"); //отправка на сервер сообщения о нажатии пробела
-					if (e.keyCode == 87) connection.send("throwpart", lastX+(_display.mouseX-360)/640*xArea, lastY+(_display.mouseY-180)/360*yArea); // отправка на сервер сообщения о нажатии на "w"
+					if (e.keyCode == 87) connection.send("throwpart"); // отправка на сервер сообщения о нажатии на "w"
 					if (sMBShowed){
 						checkMK(e);
 					} else {
@@ -377,8 +377,7 @@ private function init(event: Event): void {
 						delete waitingCells[String(id)];
 						cell.x = _x;
 						cell.y = _y;
-						cell.height = size*2;
-						cell.width = size*2;
+						cell.csize = size;
 					}
 					checkCollisions(cell, renderedCells);
 					cell.recovery(rendererVirAndPlasm, renderedCells);

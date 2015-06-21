@@ -18,8 +18,8 @@
 		
 		public function set csize(_size:Number){
 			this._size=_size;
-			//rounderObject.height = _size*2;
-			//rounderObject.width = _size*2;
+			rounderObject.height = _size*2;
+			rounderObject.width = _size*2;
 		}
 	}
 	
