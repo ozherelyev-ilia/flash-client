@@ -10,9 +10,9 @@
 
 	public class Cell extends Body {
 		
-		private var _points: Array = new Array();
-		private var color: Number;
-		private var _name: CellName;
+		protected var _points: Array = new Array();
+		protected var color: Number;
+		protected var _name: CellName;
 
 		public function Cell(_x: Number, _y: Number, size: Number, color: Number = 0x0000FF, _isVir: Boolean = false, nd: Boolean = true) {
 			this.x = _x;
@@ -49,7 +49,7 @@
 			a.bmp.draw(a.buf, a.m);
 			for (var i: Number = 0; i < _points.length; i++) {
 				if (_points[i].size() > 0.4)
-					if (a.bmp.hitTest(new Point(a.x - a.size, a.y - a.size), 0xFF, new Point(_points[i].sx() + this.x, _points[i].sy() + this.y))) {
+					if (a.bmp.hitTest(new Point(a.x - a.csize, a.y - a.csize), 0xFF, new Point(_points[i].sx() + this.x, _points[i].sy() + this.y))) {
 						_points[i].decreaseSize();
 						fin = false;
 					}
@@ -70,7 +70,7 @@
 					a.bmp.draw(a.buf, a.m);
 					for (var i: Number = 0; i < _points.length; i++) {
 						if (_points[i].size() < 0.99)
-							if (!a.bmp.hitTest(new Point(a.x - a.size, a.y - a.size), 0xFF, new Point(_points[i].ssx(10) + this.x, _points[i].ssy(10) + this.y))) {
+							if (!a.bmp.hitTest(new Point(a.x - a.csize, a.y - a.csize), 0xFF, new Point(_points[i].ssx(10) + this.x, _points[i].ssy(10) + this.y))) {
 								_points[i].increaseSize();
 								fin = false;
 							}
@@ -90,9 +90,8 @@
 		public function draw() {
 			drawToBuf();
 			rounderObject.graphics.clear();
-
 			rounderObject.graphics.beginFill(color);
-			rounderObject.graphics.lineStyle(_size*0.2, color + 0x006600);
+			rounderObject.graphics.lineStyle(3, color + 0x006600);
 			rounderObject.graphics.moveTo(_points[0].sx(), _points[0].sy());
 
 			for (var i: Number = 0; i < (2*Math.floor(Math.sqrt(10 * _size))); i++) {
@@ -110,6 +109,7 @@
 			for (var i: Number = 0; i < (2*Math.floor(Math.sqrt(10 * _size))); i++) {
 				buf.graphics.lineTo(_points[i].sx(), _points[i].sy());
 			}
+
 		}
 
 		public function isDragable(): void {

@@ -14,6 +14,7 @@
 	import flash.events.KeyboardEvent;
 	import flash.utils.getTimer;
 	import flash.utils.Timer;
+	import flash.display.MovieClip;
 
 	public class Game extends Sprite {
 		//---------------------------------------
@@ -59,6 +60,18 @@
 		
 		private var fsu:int = 0;
 		
+		public var showMass: int = 0;
+		public var showNick: int = 1;
+		public var showSkins: int = 0;
+		public var isFFA: int = 1;
+		public var themeNo: int = 1;
+		public var nickName: String = new String("");
+		
+		private var sMBShowed: Boolean = false;
+		
+		private var bckg:Sprite = null;
+		private var world:Sprite = new Sprite();
+		private var msgBox:ShortMessageBox = new ShortMessageBox();
 		private var menu:Menu;
 		//---------------------------------------
 		// CONSTRUCTOR
@@ -75,6 +88,7 @@
 			} else {
 				trace(stage.name);
 			}
+			
 			(stage == null) ? addEventListener(Event.ADDED_TO_STAGE, init) : init(null);
 			stage.addEventListener(MouseEvent.CLICK, mclick);
 			//stage.addEventListener(MouseEvent., msclick);
@@ -82,6 +96,13 @@
 			stage.addEventListener(MouseEvent.MOUSE_UP, buttonReleased);
 
 			stage.addEventListener(KeyboardEvent.KEY_DOWN, displayKeyDown);
+			
+			bckg = new Grid_mc();
+			addChildAt(bckg,0);
+			addChildAt(world,1);
+			addChildAt(msgBox,2);
+			msgBox.visible = false;
+			msgBox.y = stage.stageHeight - msgBox.height;
 		}
 
 		function mclick(e: MouseEvent) {
@@ -111,12 +132,35 @@
 			}
 		}
 
+		private function openSMBox():void{
+			msgBox.visible = sMBShowed = true;
+		}
+		private function closeSMBox():void{
+			msgBox.visible = sMBShowed = false;
+		}
+		
+		private function checkMK(e:KeyboardEvent){
+			if ((e.keyCode == 96) || (e.keyCode == 48)){
+					closeSMBox();
+			} else if ((48 < e.keyCode) && (e.keyCode < 58)){
+				closeSMBox();
+				connection.send("playerSaying", msgBox.messages[e.keyCode - 48]);
+			} else if ((96 < e.keyCode) && (e.keyCode < 106)){
+				closeSMBox();
+				connection.send("playerSaying", msgBox.messages[e.keyCode - 96]);
+			}
+		}
 		function displayKeyDown(e: KeyboardEvent) {
 
 			if (!isMouseDown) {
 				if (connection != null) {
 					if (e.keyCode == 32) connection.send("split"); //отправка на сервер сообщения о нажатии пробела
 					if (e.keyCode == 87) connection.send("throwpart", lastX+(_display.mouseX-360)/640*xArea, lastY+(_display.mouseY-180)/360*yArea); // отправка на сервер сообщения о нажатии на "w"
+					if (sMBShowed){
+						checkMK(e);
+					} else {
+						if (e.keyCode == 67) openSMBox();
+					}
 				}
 			} else {
 				if (messageString.length < 50) messageString += String.fromCharCode(e.charCode);
@@ -161,10 +205,12 @@ private function init(event: Event): void {
 		}
 		
 		public function goPlay():void{
+			menu.visible = false;
 			PlayerIO.connect(stage, gameID, "public", userID, "", null, handleConnect, handleError);
 		}
 		
 		private function playerDead(m: Message):void{
+			menu.visible = true;
 			connection.removeMessageHandler("mouseRequest", sendMouseXY);
 			connection.removeMessageHandler("currentState", playerDead);
 			connection.removeMessageHandler("playerDead", playerDead);
@@ -196,6 +242,7 @@ private function init(event: Event): void {
 			);
 
 			// создаем новую клетку
+			//var cell = new Cell();
 			//var cell = new Cell();
 			//cell.x = _display.width / 2;
 			//cell.y = _display.height / 2;
@@ -231,7 +278,7 @@ private function init(event: Event): void {
 			connection.addMessageHandler("mouseRequest", sendMouseXY); // Добавление обработчика сообщения-запроса текущих координат мыши
 
 			connection.addMessageHandler("currentState", update);
-			//this.connection.addMessageHandler("*", messageHandler); // Добавление обработчика прочих сообщений
+			this.connection.addMessageHandler("*", messageHandler); // Добавление обработчика прочих сообщений
 			connection.addMessageHandler("playerDead", playerDead);
 			addEventListener(Event.ENTER_FRAME, onEnterFrame);
 		}
@@ -251,19 +298,22 @@ private function init(event: Event): void {
 		}
 		
 		private function drawWorld(m:Message){
-			this.removeChildren();
+			world.removeChildren();
 			xArea = m.getInt(2);
 			yArea = m.getInt(3);
 			var curX: Number = m.getNumber(0);
 			var curY: Number = m.getNumber(1);
 			lastX = curX;
 			lastY = curY;
+			var xm:Number = 640/xArea;
+			var ym:Number = 360/yArea;
+			bckg.x = -(curX*xm)%30;
+			bckg.y = -(curY*ym)%30;
 			for (var i: int = 0; i < 10; i++) {
 				_feedPtr[i] = 0;
 			}
 			
-			var xm:Number = 640/xArea;
-			var ym:Number = 360/yArea;
+
 			var xa:Number = xArea/2 - curX;
 			var ya:Number = yArea/2 - curY;
 			for (i = 0; i < m.length; i += 4) {
@@ -283,24 +333,24 @@ private function init(event: Event): void {
 						feed.x = _x;
 						feed.y = _y;
 					}
-					addChildAt(feed, 0);
+					world.addChildAt(feed, 0);
 					_feedPtr[id] += 1;
 				} else if(id == 11){
-					var plasm: Cell = waitingVirAndPlasm[String(_gx) + "x" +String(_gy)];
+					var plasm: Protoplasm = waitingVirAndPlasm[String(_gx) + "x" +String(_gy)];
 					if (plasm == undefined){
 						plasm = new Protoplasm(_x, _y, size, 0x00FF00);
 					} else {
 						delete waitingVirAndPlasm[String(_gx) + "x" +String(_gy)];
 						plasm.x = _x;
 						plasm.y = _y;
-						plasm.size = size;
+						plasm.csize = size;
 					}
 					checkCollisions(plasm,waitingCells);
 					checkCollisions(plasm,renderedCells);
 					checkCollisions(plasm, rendererVirAndPlasm);
 					plasm.recovery(waitingCells, waitingVirAndPlasm, renderedCells, rendererVirAndPlasm);
 					rendererVirAndPlasm[String(_gx) + "x" +String(_gy)] = plasm;
-					addChild(plasm);
+					world.addChild(plasm);
 				}else if (id == 13) {
 					var virus: Cell = waitingVirAndPlasm[String(_gx) + "x" +String(_gy)];
 					if (virus == undefined){
@@ -315,7 +365,7 @@ private function init(event: Event): void {
 					checkCollisions(virus, rendererVirAndPlasm);
 					virus.recovery(waitingCells, waitingVirAndPlasm, renderedCells, rendererVirAndPlasm);
 					rendererVirAndPlasm[String(_gx) + "x" +String(_gy)] = virus;
-					addChild(virus);
+					world.addChild(virus);
 				} else if (id > 1000) {
 					var cell:Cell = waitingCells[String(id)];
 					if (cell == undefined){
@@ -330,7 +380,7 @@ private function init(event: Event): void {
 					checkCollisions(cell, renderedCells);
 					cell.recovery(rendererVirAndPlasm, renderedCells);
 					renderedCells[String(id)] = cell;
-					this.addChild(cell);
+					world.addChild(cell);
 				}
 			}
 			waitingCells = renderedCells;
@@ -711,7 +761,7 @@ private function init(event: Event): void {
 				}
 
 			}
-			/*
+			
 			if (m.type == "saying") {
 				var cplayer: Player;
 				if (m.getString(0) != userID) {
@@ -719,9 +769,11 @@ private function init(event: Event): void {
 				} else {
 					cplayer = currentPlayer;
 				}
+				trace(m.getString(1));
+		
 				if (cplayer != null) {
-					cplayer.Cells[0].SetMessage(m.getString(1));
-
+					//cplayer.Cells[0].SetMessage(m.getString(1));
+					
 					if (cplayer.MessageTimer.running) {
 						cplayer.MessageTimer.reset();
 					} else {
@@ -729,7 +781,7 @@ private function init(event: Event): void {
 					}
 
 				}
-			}*/
+			}
 		}
 
 
