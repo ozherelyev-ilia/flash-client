@@ -16,7 +16,7 @@
 		protected var _name: CellName;
 		private var _mass: CellName;
 
-		public function Cell(_x: Number, _y: Number, size: Number, color: Number = 0x0000FF, _isVir: Boolean = false, nd: Boolean = true, md: Boolean = true) {
+		public function Cell(_x: Number, _y: Number, size: Number, color: Number = 0x0000FF, _isVir: Boolean = false, nd: Boolean = true, md: Boolean = false) {
 			this.x = _x;
 			this.y = _y;
 			this._size = size;
