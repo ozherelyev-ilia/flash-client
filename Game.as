@@ -15,6 +15,9 @@
 	import flash.utils.getTimer;
 	import flash.utils.Timer;
 	import flash.display.MovieClip;
+	import flash.text.TextField;
+	import flash.text.TextFormat;
+	import flash.text.TextFieldType;
 
 	public class Game extends Sprite {
 		//---------------------------------------
@@ -46,7 +49,7 @@
 		private var waitingVirAndPlasm:Object = new Object();
 		
 		private var isMouseDown: Boolean = false;
-		private var messageString: String = "";
+		private var messageString: TextField = new TextField();
 
 		private var avgPing: Number = 0;
 		private var rcntUpdt: Number = 0;
@@ -120,15 +123,16 @@
 
 		function buttonPressed(event: MouseEvent) {
 			isMouseDown = true;
+			messageString.setTextFormat(new TextFormat("Verdana",10,0xFFFFFF,false,false,false));
+			stage.focus = messageString;
 		}
 
 		function buttonReleased(event: MouseEvent) {
 			isMouseDown = false;
-
-			if (messageString != "" || messageString != " ") {
-				trace(messageString);
-				connection.send("playerSaying", messageString);
-				messageString = "";
+			stage.focus = this;
+			if (messageString.text != "" || messageString.text != " ") {
+				connection.send("playerSaying", messageString.text);
+				messageString.text = "";
 			}
 		}
 
@@ -162,10 +166,7 @@
 						if (e.keyCode == 67) openSMBox();
 					}
 				}
-			} else {
-				if (messageString.length < 50) messageString += String.fromCharCode(e.charCode);
-			}
-
+			} 
 		}
 
 private function init(event: Event): void {
@@ -201,6 +202,8 @@ private function init(event: Event): void {
 			menu.width = 200;
 			menu.height = 300;
 			addChild(menu);
+			addChild(messageString);
+			messageString.type = TextFieldType.INPUT;
 			//goPlay();
 		}
 		
