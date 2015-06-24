@@ -22,7 +22,7 @@
 		//---------------------------------------
 		// PUBLIC VARIABLES
 		//---------------------------------------
-		public var gameID: String = "cells-3ikqgf3ioke4whklsuqwqa";
+		public var gameID: String = "cells2-5yrswumyieeskxfpoge6q";
 		public var userID: String;
 		public var connection: Connection;
 		//---------------------------------------
@@ -44,7 +44,7 @@
 		private var _feedPtr: Vector.<int> = new Vector.<int> ();
 		private var renderedCells:Object = new Object();
 		private var waitingCells:Object = new Object();
-		private var rendererVirAndPlasm:Object = new Object();
+		private var renderedVirAndPlasm:Object = new Object();
 		private var waitingVirAndPlasm:Object = new Object();
 		
 		private var isMouseDown: Boolean = false;
@@ -60,14 +60,15 @@
 		private var xArea:int = 274;
 		private var yArea:int = 214;
 		
-		private var fsu:int = 0;
+		private var fsu:int = -1;
+		private var inbetween:uint = 0;
 		
 		public var showMass: int = 0;
 		public var showNick: int = 1;
 		public var showSkins: int = 0;
 		public var isFFA: int = 1;
 		public var themeNo: int = 1;
-		public var nickName: String = new String("");
+		public var nickName: String = new String("Player");
 		
 		private var sMBShowed: Boolean = false;
 		
@@ -75,6 +76,7 @@
 		private var world:Sprite = new Sprite();
 		private var msgBox:ShortMessageBox = new ShortMessageBox();
 		private var menu:Menu;
+		private var curFrame:uint = 0;
 		
 		private var idArr = new Array();
 		private var nnArr = new Array();
@@ -105,6 +107,8 @@
 			addChildAt(msgBox,2);
 			msgBox.visible = false;
 			msgBox.y = stage.stageHeight - msgBox.height;
+			var myC:FPSMemCounter = new FPSMemCounter(0);
+			addChildAt(myC,3);
 		}
 
 		function mclick(e: MouseEvent) {
@@ -158,7 +162,7 @@
 			if (!isMouseDown) {
 				if (connection != null) {
 					if (e.keyCode == 32) connection.send("split"); //отправка на сервер сообщения о нажатии пробела
-					if (e.keyCode == 87) connection.send("throwpart"); // отправка на сервер сообщения о нажатии на "w"
+					if (e.keyCode == 87) connection.send("throwpart"); // отправка на сервер сообщения о нажатии на "w"					
 					if (sMBShowed){
 						checkMK(e);
 					} else {
@@ -285,19 +289,18 @@ private function init(event: Event): void {
 
 			connection.addMessageHandler("currentState", update);
 			this.connection.addMessageHandler("*", messageHandler); // Добавление обработчика прочих сообщений
+			connection.addMessageHandler("playersList", playersList);
 			connection.addMessageHandler("playerDead", playerDead);
-			addEventListener(Event.ENTER_FRAME, onEnterFrame);
+			connection.send("setNickname", nickName);
 		}
 		
 		private function playersList(m: Message) {
-			idArr = new Array(Math.floor(m.length/2));
-			nnArr = new Array(Math.floor(m.length/2));
-			var k:int = 0;
-			for (var i: int = 0; i < m.length; i += 2)
+			idArr = new Array(Math.ceil(m.length/2));
+			nnArr = new Array(Math.ceil(m.length/2));
+			for (var k:int = 0, i: int = 0; i < m.length; k++,i += 2)
 			{
-				idArr[k] = m.getInt(i);
+				idArr[k] = m.getInt(i)+1000;
 				nnArr[k] = m.getString(i+1);
-				k++;
 			}
 		}
 		
@@ -309,7 +312,31 @@ private function init(event: Event): void {
 		}
 
 		private function onEnterFrame(e: Event) {
-			if(fsu!=0){
+			if(inbetween == 0){
+				while(messages[0].getNumber(0) < curFrame-10)
+					messages.shift();
+				world.x = 0;
+				world.y = 0;
+				drawWorld(messages[0]);
+			} else {
+				var dx = (messages[1].getNumber(1) - messages[0].getNumber(1))/2/xArea*stage.stageWidth;
+				var dy = (messages[1].getNumber(2) - messages[0].getNumber(2))/2/yArea*stage.stageHeight;
+				bckg.x -= dx;
+				bckg.y -= dy;
+				world.x -= dx;
+				world.y -= dy;
+				var id:String = messages[0].getString(5); 
+				for(var i:uint = 0; i < waitingCells[id].length;i++){
+					waitingCells[id][i].x += dx;
+					waitingCells[id][i].y += dy;
+				}
+				curFrame++;
+			}
+			inbetween++;
+
+			if (inbetween == 2)
+				inbetween = 0;
+			/*if(fsu!=0){
 				while (fsu > 5){
 					fsu--;
 					messages.shift();
@@ -317,17 +344,17 @@ private function init(event: Event): void {
 				var msg:Message = messages.shift();
 				fsu--;
 				drawWorld(msg);
-			}
-			//addChild(ping);
+			}*/
+			//addChild(ping);f
 			//ping.text = String(fsu);
 		}
 		
 		private function drawWorld(m:Message){
 			world.removeChildren();
-			xArea = m.getInt(2);
-			yArea = m.getInt(3);
-			var curX: Number = m.getNumber(0);
-			var curY: Number = m.getNumber(1);
+			xArea = m.getInt(3);
+			yArea = m.getInt(4);
+			var curX: Number = m.getNumber(1);
+			var curY: Number = m.getNumber(2);
 			lastX = curX;
 			lastY = curY;
 			var xm:Number = stage.stageWidth/xArea;
@@ -341,7 +368,7 @@ private function init(event: Event): void {
 
 			var xa:Number = xArea/2 - curX;
 			var ya:Number = yArea/2 - curY;
-			for (i = 0; i < m.length; i += 4) {
+			for (i = 5; i < m.length; i += 4) {
 				var id = m.getInt(i);
 				var _gx = m.getNumber(i+1);
 				var _gy = m.getNumber(i+2);
@@ -370,11 +397,17 @@ private function init(event: Event): void {
 						plasm.y = _y;
 						plasm.csize = size;
 					}
-					checkCollisions(plasm,waitingCells);
-					checkCollisions(plasm,renderedCells);
-					checkCollisions(plasm, rendererVirAndPlasm);
-					plasm.recovery(waitingCells, waitingVirAndPlasm, renderedCells, rendererVirAndPlasm);
-					rendererVirAndPlasm[String(_gx) + "x" +String(_gy)] = plasm;
+					for each (var c in waitingCells)
+						checkCollisions(plasm,c);
+					for each (var c in renderedCells)
+						checkCollisions(plasm,c);
+					checkCollisions(plasm, renderedVirAndPlasm);
+					for each (var cw in waitingCells)
+						plasm.recovery(cw);
+					for each (var cr in renderedCells)
+						plasm.recovery(cr);
+					plasm.recovery(waitingVirAndPlasm, renderedVirAndPlasm);
+					renderedVirAndPlasm[String(_gx) + "x" +String(_gy)] = plasm;
 					world.addChild(plasm);
 				}else if (id == 13) {
 					var virus: Cell = waitingVirAndPlasm[String(_gx) + "x" +String(_gy)];
@@ -385,32 +418,47 @@ private function init(event: Event): void {
 						virus.x = _x;
 						virus.y = _y;
 					}
-					checkCollisions(virus,waitingCells);
-					checkCollisions(virus,renderedCells);
-					checkCollisions(virus, rendererVirAndPlasm);
-					virus.recovery(waitingCells, waitingVirAndPlasm, renderedCells, rendererVirAndPlasm);
-					rendererVirAndPlasm[String(_gx) + "x" +String(_gy)] = virus;
+					for each (var c in waitingCells)
+						checkCollisions(virus,c);
+					for each (var c in renderedCells)					
+						checkCollisions(virus,c);
+					checkCollisions(virus, renderedVirAndPlasm);
+					for each (var cw in waitingCells)
+						virus.recovery(cw);
+					for each (var cr in renderedCells)
+						virus.recovery(cr);
+					virus.recovery(waitingVirAndPlasm, renderedVirAndPlasm);
+					renderedVirAndPlasm[String(_gx) + "x" +String(_gy)] = virus;
 					world.addChild(virus);
 				} else if (id > 1000) {
-					var cell:Cell = waitingCells[String(id)];
-					if (cell == undefined){
-					 cell = new Cell(_x,_y,size,nnArr[idArr.indexOf(int(id))],false,showNick,showMass);
+					var cellArr:Vector.<Cell> = waitingCells[String(id)];
+					var cell:Cell;
+					if (cellArr == undefined){
+					 cellArr = new Vector.<Cell>();
+					 cell = new Cell(_x,_y,size,id,false,showNick,showMass, nnArr[idArr.indexOf(int(id))]);
 					} else {
-						delete waitingCells[String(id)];
+						cell = waitingCells[String(id)].shift();
+						if (waitingCells[String(id)].length == 0)
+							delete waitingCells[String(id)];
 						cell.x = _x;
 						cell.y = _y;
 						cell.csize = size;
 					}
-					checkCollisions(cell, renderedCells);
-					cell.recovery(rendererVirAndPlasm, renderedCells);
-					renderedCells[String(id)] = cell;
+					for each (var c in renderedCells)
+						checkCollisions(cell, c);
+					cell.recovery(renderedVirAndPlasm);
+					for each (var c in renderedCells)
+						cell.recovery(c);
+					if (renderedCells[String(id)] == undefined)
+						renderedCells[String(id)] = new Vector.<Cell>();
+					renderedCells[String(id)].push(cell);
 					world.addChild(cell);
 				}
 			}
 			waitingCells = renderedCells;
-			waitingVirAndPlasm = rendererVirAndPlasm;
+			waitingVirAndPlasm = renderedVirAndPlasm;
 			renderedCells = new Object();
-			rendererVirAndPlasm = new Object();
+			renderedVirAndPlasm = new Object();
 		}
 		public function checkCollisions(cell:Cell, cells:Object):void{
 			for each (var s:Cell in cells){
@@ -431,6 +479,13 @@ private function init(event: Event): void {
 		private function update(m: Message): void {
 			messages.push(m);
 			fsu++;
+			if (fsu == 5){
+				curFrame = m.getNumber(0);
+				addEventListener(Event.ENTER_FRAME, onEnterFrame);
+			} else if (fsu > 5){
+				curFrame = m.getNumber(0);
+			}
+			
 			/*
 			
 			if (m != null) {

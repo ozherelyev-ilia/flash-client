@@ -42,7 +42,7 @@
 			this.textField.selectable = false;
 
 			this.textField.filters = [shadow];
-			this.textField.gridFitType = flash.text.GridFitType.NONE;
+			this.textField.gridFitType = flash.text.GridFitType.SUBPIXEL;
 			
 			setSize(_size);			
 		}

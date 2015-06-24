@@ -63,7 +63,7 @@
 
 			addChild(rounderObject);
 		
-			this.cacheAsBitmap = true;
+			this.cacheAsBitmap = false;
 			draw();
 
 		}

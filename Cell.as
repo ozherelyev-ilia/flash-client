@@ -16,7 +16,7 @@
 		protected var _name: CellName;
 		private var _mass: CellName;
 
-		public function Cell(_x: Number, _y: Number, size: Number, color: Number = 0x0000FF, _isVir: Boolean = false, nd: Boolean = true, md: Boolean = false) {
+		public function Cell(_x: Number, _y: Number, size: Number, color: Number = 0x0000FF, _isVir: Boolean = false, nd: Boolean = true, md: Boolean = false, nickname:String = "") {
 			this.x = _x;
 			this.y = _y;
 			this._size = size;
@@ -36,7 +36,8 @@
 			addChild(rounderObject);
 			
 			if (!_isVir && nd) {
-				_name = new CellName(size, String(color));
+				trace(nickname);
+				_name = new CellName(size, nickname);
 				if (md){
 					var textH:Number = _name.getTH();
 					_name.setY(-textH/2 - 2.5)
@@ -51,7 +52,7 @@
 				addChild(_mass);
 			}
 			
-			this.cacheAsBitmap = true;
+			this.cacheAsBitmap = false;
 			draw();
 
 		}
