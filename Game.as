@@ -74,6 +74,7 @@
 		
 		private var bckg:Sprite = null;
 		private var world:Sprite = new Sprite();
+		private var playerCellsInstances = new Sprite();
 		private var msgBox:ShortMessageBox = new ShortMessageBox();
 		private var menu:Menu;
 		private var curFrame:uint = 0;
@@ -104,11 +105,12 @@
 			bckg.cacheAsBitmap = true;
 			addChildAt(bckg,0);
 			addChildAt(world,1);
-			addChildAt(msgBox,2);
+			addChildAt(playerCellsInstances,2);
+			addChildAt(msgBox,3);
 			msgBox.visible = false;
 			msgBox.y = stage.stageHeight - msgBox.height;
 			var myC:FPSMemCounter = new FPSMemCounter(0);
-			addChildAt(myC,3);
+			addChildAt(myC,4);
 		}
 
 		function mclick(e: MouseEvent) {
@@ -325,11 +327,6 @@ private function init(event: Event): void {
 				bckg.y -= dy;
 				world.x -= dx;
 				world.y -= dy;
-				var id:String = messages[0].getString(5); 
-				for(var i:uint = 0; i < waitingCells[id].length;i++){
-					waitingCells[id][i].x += dx;
-					waitingCells[id][i].y += dy;
-				}
 				curFrame++;
 			}
 			inbetween++;
@@ -351,6 +348,7 @@ private function init(event: Event): void {
 		
 		private function drawWorld(m:Message){
 			world.removeChildren();
+			playerCellsInstances.removeChildren();
 			xArea = m.getInt(3);
 			yArea = m.getInt(4);
 			var curX: Number = m.getNumber(1);
@@ -452,7 +450,10 @@ private function init(event: Event): void {
 					if (renderedCells[String(id)] == undefined)
 						renderedCells[String(id)] = new Vector.<Cell>();
 					renderedCells[String(id)].push(cell);
-					world.addChild(cell);
+					if (String(id) == m.getString(5))
+						playerCellsInstances.addChild(cell);
+					else
+						world.addChild(cell);
 				}
 			}
 			waitingCells = renderedCells;
