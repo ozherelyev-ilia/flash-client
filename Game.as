@@ -81,6 +81,9 @@
 		
 		private var idArr = new Array();
 		private var nnArr = new Array();
+		
+		private var tb = 0, lb = 0, rb = 5000, bb = 5000;
+		public var ctb = 0, clb = 0, crb = 5000, cbb = 5000;
 		//---------------------------------------
 		// CONSTRUCTOR
 		//---------------------------------------
@@ -366,6 +369,11 @@ private function init(event: Event): void {
 
 			var xa:Number = xArea/2 - curX;
 			var ya:Number = yArea/2 - curY;
+			
+			clb = (lb+xa)*xm;
+			crb = (rb+xa)*xm;
+			ctb = (tb+ya)*ym;
+			cbb = (bb+xa)*ym;
 			for (i = 5; i < m.length; i += 4) {
 				var id = m.getInt(i);
 				var _gx = m.getNumber(i+1);
@@ -395,16 +403,17 @@ private function init(event: Event): void {
 						plasm.y = _y;
 						plasm.csize = size;
 					}
+					
 					for each (var c in waitingCells)
 						checkCollisions(plasm,c);
 					for each (var c in renderedCells)
 						checkCollisions(plasm,c);
 					checkCollisions(plasm, renderedVirAndPlasm);
 					for each (var cw in waitingCells)
-						plasm.recovery(cw);
+						plasm.recovery(this,cw);
 					for each (var cr in renderedCells)
-						plasm.recovery(cr);
-					plasm.recovery(waitingVirAndPlasm, renderedVirAndPlasm);
+						plasm.recovery(this,cr);
+					plasm.recovery(this,waitingVirAndPlasm, renderedVirAndPlasm);
 					renderedVirAndPlasm[String(_gx) + "x" +String(_gy)] = plasm;
 					world.addChild(plasm);
 				}else if (id == 13) {
@@ -416,16 +425,17 @@ private function init(event: Event): void {
 						virus.x = _x;
 						virus.y = _y;
 					}
+					
 					for each (var c in waitingCells)
 						checkCollisions(virus,c);
 					for each (var c in renderedCells)					
 						checkCollisions(virus,c);
 					checkCollisions(virus, renderedVirAndPlasm);
 					for each (var cw in waitingCells)
-						virus.recovery(cw);
+						virus.recovery(this,cw);
 					for each (var cr in renderedCells)
-						virus.recovery(cr);
-					virus.recovery(waitingVirAndPlasm, renderedVirAndPlasm);
+						virus.recovery(this,cr);
+					virus.recovery(this,waitingVirAndPlasm, renderedVirAndPlasm);
 					renderedVirAndPlasm[String(_gx) + "x" +String(_gy)] = virus;
 					world.addChild(virus);
 				} else if (id > 1000) {
@@ -442,11 +452,12 @@ private function init(event: Event): void {
 						cell.y = _y;
 						cell.csize = size;
 					}
+
 					for each (var c in renderedCells)
 						checkCollisions(cell, c);
-					cell.recovery(renderedVirAndPlasm);
+					cell.recovery(this,renderedVirAndPlasm);
 					for each (var c in renderedCells)
-						cell.recovery(c);
+						cell.recovery(this,c);
 					if (renderedCells[String(id)] == undefined)
 						renderedCells[String(id)] = new Vector.<Cell>();
 					renderedCells[String(id)].push(cell);
@@ -464,8 +475,8 @@ private function init(event: Event): void {
 		public function checkCollisions(cell:Cell, cells:Object):void{
 			for each (var s:Cell in cells){
 				do {
-					var ahtb:Boolean = s.hTest(cell);
-					var bhta:Boolean = cell.hTest(s);
+					var ahtb:Boolean = s.hTest(this, cell);
+					var bhta:Boolean = cell.hTest(this, s);
 				} while(!(ahtb&&bhta));
 				s.draw();
 				cell.draw();

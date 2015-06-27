@@ -2,6 +2,7 @@
 	import flash.display.MovieClip;
 	import flash.events.Event;
 	import flash.events.MouseEvent;
+	import flash.text.TextFormat;
 
 	public class Menu extends MovieClip {
 		// game default settings
@@ -29,6 +30,7 @@
 			super();
 			this.stop();
 			game = _game;
+			startBtn.textField.setTextFormat(new TextFormat("Verdana",50));
 			startBtn.addEventListener(MouseEvent.CLICK, startBtnHandler); // frame 1 menu
 			settingsBtn.addEventListener(MouseEvent.CLICK, settingsBtnHandler); // frame 1 menu
 			helpBtn.addEventListener(MouseEvent.CLICK, helpBtnHandler); // frame 1 menu
