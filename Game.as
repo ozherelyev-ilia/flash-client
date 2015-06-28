@@ -350,8 +350,6 @@ private function init(event: Event): void {
 		}
 		
 		private function drawWorld(m:Message){
-			world.removeChildren();
-			playerCellsInstances.removeChildren();
 			xArea = m.getInt(3);
 			yArea = m.getInt(4);
 			var curX: Number = m.getNumber(1);
@@ -386,17 +384,19 @@ private function init(event: Event): void {
 					if (_feedPtr[id] == _feed[id].length) {
 						feed = new Feed(_x, _y, id);
 						_feed[id].push(feed);
+						world.addChildAt(feed, 0);
 					} else {
 						feed = _feed[id][_feedPtr[id]];
 						feed.x = _x;
 						feed.y = _y;
 					}
-					world.addChildAt(feed, 0);
+					
 					_feedPtr[id] += 1;
 				} else if(id == 11){
 					var plasm: Protoplasm = waitingVirAndPlasm[String(_gx) + "x" +String(_gy)];
 					if (plasm == undefined){
 						plasm = new Protoplasm(_x, _y, size, 0x00FF00);
+						world.addChild(plasm);
 					} else {
 						delete waitingVirAndPlasm[String(_gx) + "x" +String(_gy)];
 						plasm.x = _x;
@@ -415,11 +415,11 @@ private function init(event: Event): void {
 						plasm.recovery(this,cr);
 					plasm.recovery(this,waitingVirAndPlasm, renderedVirAndPlasm);
 					renderedVirAndPlasm[String(_gx) + "x" +String(_gy)] = plasm;
-					world.addChild(plasm);
 				}else if (id == 13) {
 					var virus: Cell = waitingVirAndPlasm[String(_gx) + "x" +String(_gy)];
 					if (virus == undefined){
 						virus = new Cell(_x, _y, size, 0x00FF00, true);
+						world.addChild(virus);
 					} else {
 						delete waitingVirAndPlasm[String(_gx) + "x" +String(_gy)];
 						virus.x = _x;
@@ -437,14 +437,18 @@ private function init(event: Event): void {
 						virus.recovery(this,cr);
 					virus.recovery(this,waitingVirAndPlasm, renderedVirAndPlasm);
 					renderedVirAndPlasm[String(_gx) + "x" +String(_gy)] = virus;
-					world.addChild(virus);
+					
 				} else if (id > 1000) {
 					var cellArr:Vector.<Cell> = waitingCells[String(id)];
 					var cell:Cell;
 					if (cellArr == undefined){
 					 cellArr = new Vector.<Cell>();
 					 cell = new Cell(_x,_y,size,id,false,showNick,showMass, nnArr[idArr.indexOf(int(id))]);
-					} else {
+					 if (String(id) == m.getString(5))
+						playerCellsInstances.addChild(cell);
+					 else
+						world.addChild(cell);
+					  } else {
 						cell = waitingCells[String(id)].shift();
 						if (waitingCells[String(id)].length == 0)
 							delete waitingCells[String(id)];
@@ -461,10 +465,17 @@ private function init(event: Event): void {
 					if (renderedCells[String(id)] == undefined)
 						renderedCells[String(id)] = new Vector.<Cell>();
 					renderedCells[String(id)].push(cell);
-					if (String(id) == m.getString(5))
-						playerCellsInstances.addChild(cell);
-					else
-						world.addChild(cell);
+					
+				}
+			}
+			for each (var a in waitingCells)
+				world.removeChild(a);
+			for each (var a in waitingVirAndPlasm)
+				world.removeChild(a);
+			for (var i: int = 0; i < 10; i++) {
+				while(_feedPtr[i] < _feed[i].length) {
+					var a = _feed[i].pop();
+					world.removeChild(a);
 				}
 			}
 			waitingCells = renderedCells;
