@@ -1,19 +1,14 @@
 ﻿package {
 	import flash.display.Sprite;
-	import flash.events.MouseEvent;
 
-	public class FriendsMenu extends Sprite {
+	public class FriendsMenu {
 
-		private var friends: Vector.<FriendAvatar> = new Vector.<FriendAvatar> ();
+		private var friends: Vector. < FriendAvatar > = new Vector. < FriendAvatar > ();
 		private var panel: Sprite = new Sprite();
 		public function FriendsMenu() {
 			addChild(panel);
-			
-			lb.x = 0;
-			trace(rb.x);
-			rb.x = 850 - rb.width;
-			lb.addEventListener(MouseEvent.CLICK, leftButtonClick);
-			rb.addEventListener(MouseEvent.CLICK, rightButtonClick);
+			lb.addEventListener(MouseEvent.Click, leftButtonClick);
+			rb.addEventListener(MouseEvent.Click, rightButtonClick);
 		}
 
 		private function leftButtonClick() {

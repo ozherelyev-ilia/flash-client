@@ -17,10 +17,7 @@
 	import flash.text.TextField;
 	import flash.text.TextFormat;
 	import flash.text.TextFieldType;
-<<<<<<< HEAD
-=======
 	import fl.controls.Label;
->>>>>>> Chart added
 
 	public class Game extends Sprite {
 		//---------------------------------------
@@ -88,11 +85,8 @@
 		
 		private var tb = 0, lb = 0, rb = 5000, bb = 5000;
 		public var ctb = 0, clb = 0, crb = 5000, cbb = 5000;
-<<<<<<< HEAD
-=======
 		
 		private var chartWindow:Chart = new Chart();
->>>>>>> Chart added
 		//---------------------------------------
 		// CONSTRUCTOR
 		//---------------------------------------
@@ -121,17 +115,12 @@
 			addChildAt(msgBox,3);
 			msgBox.visible = false;
 			msgBox.y = stage.stageHeight - msgBox.height;
-<<<<<<< HEAD
-			var myC:FPSMemCounter = new FPSMemCounter(0);
-			addChildAt(myC,4);
-=======
 			chartWindow.visible = true;
 			var myC:FPSMemCounter = new FPSMemCounter(0);
 			var chartWindow1:Chart = new Chart();
 			addChildAt(myC,4);
 			addChildAt(chartWindow,5);
 			chartWindow.y = stage.stageHeight - chartWindow.height;
->>>>>>> Chart added
 		}
 
 		function mclick(e: MouseEvent) {
@@ -313,64 +302,9 @@ private function init(event: Event): void {
 			connection.addMessageHandler("currentState", update);
 			this.connection.addMessageHandler("*", messageHandler); // Добавление обработчика прочих сообщений
 			connection.addMessageHandler("playersList", playersList);
-<<<<<<< HEAD
-			connection.addMessageHandler("playerDead", playerDead);
-			connection.send("setNickname", nickName);
-		}
-		
-		private function playersList(m: Message) {
-			idArr = new Array(Math.ceil(m.length/2));
-			nnArr = new Array(Math.ceil(m.length/2));
-			for (var k:int = 0, i: int = 0; i < m.length; k++,i += 2)
-			{
-				idArr[k] = m.getInt(i)+1000;
-				nnArr[k] = m.getString(i+1);
-			}
-		}
-		
-		private function playerLeft(m: Message) {
-			var pid:int = m.getInt(0);
-			var k:int = idArr.indexOf(pid);
-			idArr.splice(k,1);
-			nnArr.splice(k,1);
-		}
-
-		private function onEnterFrame(e: Event) {
-			if(inbetween == 0){
-				while(messages[0].getNumber(0) < curFrame-10)
-					messages.shift();
-				world.x = 0;
-				world.y = 0;
-				drawWorld(messages[0]);
-			} else {
-				var dx = (messages[1].getNumber(1) - messages[0].getNumber(1))/2/xArea*stage.stageWidth;
-				var dy = (messages[1].getNumber(2) - messages[0].getNumber(2))/2/yArea*stage.stageHeight;
-				bckg.x -= dx;
-				bckg.y -= dy;
-				world.x -= dx;
-				world.y -= dy;
-				curFrame++;
-			}
-			inbetween++;
-
-			if (inbetween == 2)
-				inbetween = 0;
-			/*if(fsu!=0){
-				while (fsu > 5){
-					fsu--;
-					messages.shift();
-				}
-				var msg:Message = messages.shift();
-				fsu--;
-				drawWorld(msg);
-			}*/
-			//addChild(ping);f
-			//ping.text = String(fsu);
-=======
 			connection.addMessageHandler("saying", onMessageGot);
 			connection.addMessageHandler("playerDead", playerDead);
 			connection.send("setNickname", nickName);
->>>>>>> Chart added
 		}
 		private function onMessageGot(m: Message){
 			var pid:int = m.getInt(0) + 1001;
@@ -389,9 +323,6 @@ private function init(event: Event): void {
 		}		
 		
 		
-<<<<<<< HEAD
-		private function drawWorld(m:Message){
-=======
 		private function playersList(m: Message) {
 			idArr = new Array(Math.ceil(m.length/2));
 			nnArr = new Array(Math.ceil(m.length/2));
@@ -445,7 +376,6 @@ private function init(event: Event): void {
 		private function drawWorld(m:Message){
 			world.removeChildren();
 			playerCellsInstances.removeChildren();
->>>>>>> Chart added
 			xArea = m.getInt(3);
 			yArea = m.getInt(4);
 			var curX: Number = m.getNumber(1);
@@ -480,29 +410,17 @@ private function init(event: Event): void {
 					if (_feedPtr[id] == _feed[id].length) {
 						feed = new Feed(_x, _y, id);
 						_feed[id].push(feed);
-<<<<<<< HEAD
-						world.addChildAt(feed, 0);
-=======
->>>>>>> Chart added
 					} else {
 						feed = _feed[id][_feedPtr[id]];
 						feed.x = _x;
 						feed.y = _y;
 					}
-<<<<<<< HEAD
-					
-=======
 					world.addChildAt(feed, 0);
->>>>>>> Chart added
 					_feedPtr[id] += 1;
 				} else if(id == 11){
 					var plasm: Protoplasm = waitingVirAndPlasm[String(_gx) + "x" +String(_gy)];
 					if (plasm == undefined){
 						plasm = new Protoplasm(_x, _y, size, 0x00FF00);
-<<<<<<< HEAD
-						world.addChild(plasm);
-=======
->>>>>>> Chart added
 					} else {
 						delete waitingVirAndPlasm[String(_gx) + "x" +String(_gy)];
 						plasm.x = _x;
@@ -521,18 +439,11 @@ private function init(event: Event): void {
 						plasm.recovery(this,cr);
 					plasm.recovery(this,waitingVirAndPlasm, renderedVirAndPlasm);
 					renderedVirAndPlasm[String(_gx) + "x" +String(_gy)] = plasm;
-<<<<<<< HEAD
-=======
 					world.addChild(plasm);
->>>>>>> Chart added
 				}else if (id == 13) {
 					var virus: Cell = waitingVirAndPlasm[String(_gx) + "x" +String(_gy)];
 					if (virus == undefined){
 						virus = new Cell(_x, _y, size, 0x00FF00, true);
-<<<<<<< HEAD
-						world.addChild(virus);
-=======
->>>>>>> Chart added
 					} else {
 						delete waitingVirAndPlasm[String(_gx) + "x" +String(_gy)];
 						virus.x = _x;
@@ -550,26 +461,14 @@ private function init(event: Event): void {
 						virus.recovery(this,cr);
 					virus.recovery(this,waitingVirAndPlasm, renderedVirAndPlasm);
 					renderedVirAndPlasm[String(_gx) + "x" +String(_gy)] = virus;
-<<<<<<< HEAD
-					
-=======
 					world.addChild(virus);
->>>>>>> Chart added
 				} else if (id > 1000) {
 					var cellArr:Vector.<Cell> = waitingCells[String(id)];
 					var cell:Cell;
 					if (cellArr == undefined){
 					 cellArr = new Vector.<Cell>();
 					 cell = new Cell(_x,_y,size,id,false,showNick,showMass, nnArr[idArr.indexOf(int(id))]);
-<<<<<<< HEAD
-					 if (String(id) == m.getString(5))
-						playerCellsInstances.addChild(cell);
-					 else
-						world.addChild(cell);
-					  } else {
-=======
 					} else {
->>>>>>> Chart added
 						cell = waitingCells[String(id)].shift();
 						if (waitingCells[String(id)].length == 0)
 							delete waitingCells[String(id)];
@@ -586,24 +485,10 @@ private function init(event: Event): void {
 					if (renderedCells[String(id)] == undefined)
 						renderedCells[String(id)] = new Vector.<Cell>();
 					renderedCells[String(id)].push(cell);
-<<<<<<< HEAD
-					
-				}
-			}
-			for each (var a in waitingCells)
-				world.removeChild(a);
-			for each (var a in waitingVirAndPlasm)
-				world.removeChild(a);
-			for (var i: int = 0; i < 10; i++) {
-				while(_feedPtr[i] < _feed[i].length) {
-					var a = _feed[i].pop();
-					world.removeChild(a);
-=======
 					if (String(id) == m.getString(5))
 						playerCellsInstances.addChild(cell);
 					else
 						world.addChild(cell);
->>>>>>> Chart added
 				}
 			}
 			waitingCells = renderedCells;
@@ -981,28 +866,6 @@ private function init(event: Event): void {
 
 			}
 			
-<<<<<<< HEAD
-			if (m.type == "saying") {
-				var cplayer: Player;
-				if (m.getString(0) != userID) {
-					cplayer = findPlayerById(m.getString(0));
-				} else {
-					cplayer = currentPlayer;
-				}
-				trace(m.getString(1));
-		
-				if (cplayer != null) {
-					//cplayer.Cells[0].SetMessage(m.getString(1));
-					
-					if (cplayer.MessageTimer.running) {
-						cplayer.MessageTimer.reset();
-					} else {
-						cplayer.MessageTimer.start();
-					}
-
-				}
-			}
-=======
 		//	if (m.type == "saying") {
 		//		var cplayer: Player;
 		//		if (m.getString(0) != userID) {
@@ -1023,7 +886,6 @@ private function init(event: Event): void {
 
 		//		}
 		//	}
->>>>>>> Chart added
 		}
 
 
