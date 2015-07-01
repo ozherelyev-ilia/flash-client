@@ -35,8 +35,6 @@
 			settingsBtn.addEventListener(MouseEvent.CLICK, settingsBtnHandler); // frame 1 menu
 			helpBtn.addEventListener(MouseEvent.CLICK, helpBtnHandler); // frame 1 menu
 			recordsBtn.addEventListener(MouseEvent.CLICK, recordsBtnHandler); // frame 1 menu
-
-
 		}
 
 		private function startBtnHandler(e: MouseEvent): void {

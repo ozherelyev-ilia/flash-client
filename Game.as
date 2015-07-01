@@ -87,6 +87,10 @@
 		public var ctb = 0, clb = 0, crb = 5000, cbb = 5000;
 		
 		private var chartWindow:Chart = new Chart();
+		
+		private var vkapi:VkApi;
+		private var curMsg:Message;
+		
 		//---------------------------------------
 		// CONSTRUCTOR
 		//---------------------------------------
@@ -109,6 +113,7 @@
 			
 			bckg = new Grid();
 			bckg.cacheAsBitmap = true;
+			vkapi = new VkApi(stage);
 			addChildAt(bckg,0);
 			addChildAt(world,1);
 			addChildAt(playerCellsInstances,2);
@@ -120,7 +125,9 @@
 			var chartWindow1:Chart = new Chart();
 			addChildAt(myC,4);
 			addChildAt(chartWindow,5);
-			chartWindow.y = stage.stageHeight - chartWindow.height;
+			chartWindow.y = stage.stageHeight - chartWindow.height-vkapi.height;
+			addChild(vkapi);
+			vkapi.y = stage.stageHeight - vkapi.height;
 		}
 
 		function mclick(e: MouseEvent) {
@@ -307,7 +314,7 @@ private function init(event: Event): void {
 			connection.send("setNickname", nickName);
 		}
 		private function onMessageGot(m: Message){
-			var pid:int = m.getInt(0) + 1001;
+			var pid:int = m.getInt(0);
 			var msg:String = m.getString(1);
 			var nickName:String = nnArr[idArr.indexOf(pid)];
 			var color:String = "00000000" + pid.toString(16);
@@ -328,7 +335,7 @@ private function init(event: Event): void {
 			nnArr = new Array(Math.ceil(m.length/2));
 			for (var k:int = 0, i: int = 0; i < m.length; k++,i += 2)
 			{
-				idArr[k] = m.getInt(i)+1000;
+				idArr[k] = m.getInt(i);
 				nnArr[k] = m.getString(i+1);
 			}
 		}
@@ -340,10 +347,21 @@ private function init(event: Event): void {
 			nnArr.splice(k,1);
 		}
 
+		private function checkMessages(){
+			if (messages.length > 1){
+				if( messages[0].getNumber(0) > messages[1].getNumber(1)){
+					messages.splice(1,1);
+					checkMessages();
+				}
+			}
+		}
+		
 		private function onEnterFrame(e: Event) {
 			if(inbetween == 0){
 				while(messages[0].getNumber(0) < curFrame-10)
 					messages.shift();
+				//checkMessages();
+				
 				world.x = 0;
 				world.y = 0;
 				drawWorld(messages[0]);

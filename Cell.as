@@ -20,7 +20,7 @@
 		public var curX = 0;
 		public var curY = 0;
 
-		public function Cell(_x: Number, _y: Number, size: Number, color: Number = 0x0000FF, _isVir: Boolean = false, nd: Boolean = true, md: Boolean = false, nickname: String = "") {
+		public function Cell(_x: Number, _y: Number, size: Number, color: Number = 0x0000FF, _isVir: Boolean = false, nd: Boolean = true, md: Boolean = false, nickname: String = "Cell") {
 			this.x = _x;
 			this.y = _y;
 			this._size = size;
@@ -39,6 +39,8 @@
 			m.translate(size, size);
 			addChild(rounderObject);
 
+			if (nickname == null)
+				trace(_isVir);
 			if(!_isVir && nd) {
 				trace(nickname);
 				_name = new CellName(size, nickname);
