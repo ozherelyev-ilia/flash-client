@@ -21,9 +21,6 @@
 		}
 		
 		private function onLoadComplete(e:Event):void{
-			var complete = new TextField();
-			complete.text = loader.contentLoaderInfo.contentType;
-			addChild(complete);
 			var image:Bitmap = loader.contentLoaderInfo.content as Bitmap;
 			image.height = this.height;
 			image.width = this.width;

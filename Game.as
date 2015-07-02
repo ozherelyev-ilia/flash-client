@@ -83,13 +83,14 @@
 		private var idArr = new Array();
 		private var nnArr = new Array();
 		
-		private var tb = 0, lb = 0, rb = 5000, bb = 5000;
+		private var tb = 0, lb = 0, rb = 1500, bb = 1500;
 		public var ctb = 0, clb = 0, crb = 5000, cbb = 5000;
 		
 		private var chartWindow:Chart = new Chart();
 		
 		private var vkapi:VkApi;
 		private var curMsg:Message;
+		private var nextMsg:Message;
 		
 		//---------------------------------------
 		// CONSTRUCTOR
@@ -348,26 +349,30 @@ private function init(event: Event): void {
 		}
 
 		private function checkMessages(){
-			if (messages.length > 1){
-				if( messages[0].getNumber(0) > messages[1].getNumber(1)){
-					messages.splice(1,1);
+			curMsg = nextMsg;
+			var n:uint = 0;
+			var min:uint = uint.MAX_VALUE;
+			for(var i:uint = 0; i < messages.length; i++)
+				if ((messages[i].getNumber(0)>curMsg.getNumber(0))&&(messages[i].getNumber(0)<min))
+					n = i;
+			nextMsg = messages[n];
+			if (nextMsg.getNumber(0) < curMsg.getNumber(0))
 					checkMessages();
-				}
-			}
 		}
 		
 		private function onEnterFrame(e: Event) {
 			if(inbetween == 0){
 				while(messages[0].getNumber(0) < curFrame-10)
 					messages.shift();
-				//checkMessages();
+				checkMessages();
 				
 				world.x = 0;
 				world.y = 0;
-				drawWorld(messages[0]);
+				drawWorld(curMsg);
+				curFrame = curMsg.getNumber(0) + 10;
 			} else {
-				var dx = (messages[1].getNumber(1) - messages[0].getNumber(1))/2/xArea*stage.stageWidth;
-				var dy = (messages[1].getNumber(2) - messages[0].getNumber(2))/2/yArea*stage.stageHeight;
+				var dx = (nextMsg.getNumber(1) - curMsg.getNumber(1))/2/xArea*stage.stageWidth;
+				var dy = (nextMsg.getNumber(2) - curMsg.getNumber(2))/2/yArea*stage.stageHeight;
 				bckg.x -= dx;
 				bckg.y -= dy;
 				world.x -= dx;
@@ -535,10 +540,12 @@ private function init(event: Event): void {
 			fsu++;
 			if (fsu == 5){
 				curFrame = m.getNumber(0);
+				curMsg = messages[0];
+				nextMsg = messages[1];
 				addEventListener(Event.ENTER_FRAME, onEnterFrame);
-			} else if (fsu > 5){
-				curFrame = m.getNumber(0);
-			}
+			} //else if (fsu > 5){
+				//curFrame = m.getNumber(0);
+			//}
 			
 			/*
 			

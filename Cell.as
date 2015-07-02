@@ -79,6 +79,7 @@
 					(_points[i].sy() + this.y < game.ctb) ||
 					(_points[i].sy() + this.y > game.cbb)) {
 					_points[i].decreaseSize();
+						trace(game.clb);
 					fin = false;
 				}
 				/*else{
