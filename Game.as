@@ -336,12 +336,10 @@
 		
 		
 		private function playersList(m: Message) {
-			idArr = new Array(Math.ceil(m.length/2));
-			nnArr = new Array(Math.ceil(m.length/2));
 			for (var k:int = 0, i: int = 0; i < m.length; k++,i += 2)
 			{
-				idArr[k] = m.getInt(i);
-				nnArr[k] = m.getString(i+1);
+				idArr.push(m.getInt(i));
+				nnArr.push(m.getString(i+1));
 			}
 		}
 		
@@ -406,7 +404,6 @@
 				_feedPtr[i] = 0;
 			}
 			
-
 			var xa:Number = xArea/2 - curX;
 			var ya:Number = yArea/2 - curY;
 			
@@ -442,6 +439,7 @@
 						plasm.x = _x;
 						plasm.y = _y;
 						plasm.csize = size;
+						plasm.recovery();
 					}
 					
 					for each (var c in waitingCells)
@@ -449,21 +447,18 @@
 					for each (var c in renderedCells)
 						checkCollisions(plasm,c);
 					checkCollisions(plasm, renderedVirAndPlasm);
-					for each (var cw in waitingCells)
-						plasm.recovery(this,cw);
-					for each (var cr in renderedCells)
-						plasm.recovery(this,cr);
-					plasm.recovery(this,waitingVirAndPlasm, renderedVirAndPlasm);
 					renderedVirAndPlasm[String(_gx) + "x" +String(_gy)] = plasm;
 					world.addChild(plasm);
 				}else if (id == 13) {
 					var virus: Cell = waitingVirAndPlasm[String(_gx) + "x" +String(_gy)];
 					if (virus == undefined){
 						virus = new Cell(_x, _y, size, 0x00FF00, true);
+						
 					} else {
 						delete waitingVirAndPlasm[String(_gx) + "x" +String(_gy)];
 						virus.x = _x;
 						virus.y = _y;
+						virus.recovery();
 					}
 					
 					for each (var c in waitingCells)
@@ -471,11 +466,6 @@
 					for each (var c in renderedCells)					
 						checkCollisions(virus,c);
 					checkCollisions(virus, renderedVirAndPlasm);
-					for each (var cw in waitingCells)
-						virus.recovery(this,cw);
-					for each (var cr in renderedCells)
-						virus.recovery(this,cr);
-					virus.recovery(this,waitingVirAndPlasm, renderedVirAndPlasm);
 					renderedVirAndPlasm[String(_gx) + "x" +String(_gy)] = virus;
 					world.addChild(virus);
 				} else if (id > 1000) {
@@ -497,14 +487,12 @@
 							cell.x = _x;
 							cell.y = _y;
 						}
+						cell.recovery();
 						cell.csize = size;
 					}
 
 					for each (var c in renderedCells)
 						checkCollisions(cell, c);
-					cell.recovery(this,renderedVirAndPlasm);
-					for each (var c in renderedCells)
-						cell.recovery(this,c);
 					if (renderedCells[String(id)] == undefined)
 						renderedCells[String(id)] = new Vector.<Cell>();
 					renderedCells[String(id)].push(cell);
@@ -526,9 +514,9 @@
 				} while(!(ahtb&&bhta));
 				s.smooth();
 				cell.smooth();
-				s.draw();
-				cell.draw();
+				s.draw();//это можно попытаться вынести отсюда, вообще
 			}
+			cell.draw();
 		}
 		//В сообщении передается массив в котором последовательно идут: 1) айди объекта, 2) X, 3) Y, 4) радиус, далее айди следующего объекта и т.д. 
 		//Айди следующие: 

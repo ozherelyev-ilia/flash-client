@@ -10,13 +10,19 @@
 
 	public class Cell extends Body {
 
-		private var maxX:Number = 50000;
-		private var maxY:Number = 50000;
+		private var maxX: Number = 50000;
+		private var maxY: Number = 50000;
 		protected var _points: Array = new Array();
 		protected var pointsCount: uint;
 		protected var color: Number;
 		protected var _name: CellName;
 		private var _mass: CellName;
+
+		private var p1: Point = new Point();
+		private var p2: Point = new Point();
+
+		private var pointsAcc: Array = new Array();
+		private var tPointsAcc: Array = new Array();
 
 		public function Cell(_x: Number, _y: Number, size: Number, color: Number = 0x0000FF, _isVir: Boolean = false, nd: Boolean = true, md: Boolean = false, nickname: String = "Cell") {
 			this.x = _x;
@@ -27,7 +33,7 @@
 
 			var _thornCoeff: Number = 1;
 			pointsCount = 2 * Math.floor(Math.sqrt(10 * _size));
-			var k:Number = 2 * Math.PI / pointsCount;
+			var k: Number = 2 * Math.PI / pointsCount;
 			for(var i: uint = 0; i < pointsCount; i++) {
 				_thornCoeff = (i % 2) && _isVir ? 0.8 : 1;
 				_points.push(new CellPoint(_size * Math.sin(i * k) * _thornCoeff, _size * Math.cos(i * k) * _thornCoeff));
@@ -37,7 +43,7 @@
 			m.translate(size, size);
 			addChild(rounderObject);
 
-			if (nickname == null)
+			if(nickname == null)
 				trace(_isVir);
 			if(!_isVir && nd) {
 				trace(nickname);
@@ -61,28 +67,46 @@
 
 		}
 
-		public function hTest(game: Game, a: Body): Boolean {
-			var fin:Boolean = true;
+		private function checkPoint(cp: CellPoint, a: Cell, game: Game, _pointsAcc: Array): Boolean {
+			if(cp.size() > 0.35) {
+				p1.setTo(a.x - a.csize, a.y - a.csize);
+				p2.setTo(cp.sx() + x, cp.sy() + y);
+				if(a.bmp.hitTest(p1, 0xFF, p2)) {
+					cp.decreaseSize(0.05);
+					_pointsAcc.push(cp);
+					return false;
+				}
+				if((cp.sx() + this.x < game.clb) ||
+					(cp.sx() + this.x > game.crb) ||
+					(cp.sy() + this.y < game.ctb) ||
+					(cp.sy() + this.y > game.cbb)) {
+					cp.decreaseSize(0.05);
+					_pointsAcc.push(cp);
+					return false;
+				}
+			}
+			return true;
+		}
+
+		public function hTest(game: Game, a: Cell): Boolean {
+			var fin: Boolean = true;
 
 			a.bmp.fillRect(a.bmp.rect, 0);
 			a.bmp.draw(a.buf, a.m);
-			for(var i: uint = 0; i < pointsCount; i++) {
-				if(_points[i].size() > 0.35)
-					if(a.bmp.hitTest(new Point(a.x - a.csize, a.y - a.csize), 0xFF, new Point(_points[i].sx() + this.x, _points[i].sy() + this.y))) {
-						_points[i].decreaseSize();
-						fin = false;
-					}
-				if((_points[i].sx() + this.x < game.clb) ||
-					(_points[i].sx() + this.x > game.crb) ||
-					(_points[i].sy() + this.y < game.ctb) ||
-					(_points[i].sy() + this.y > game.cbb)) {
-					_points[i].decreaseSize();												
-					fin = false;
+
+			if(pointsAcc.length == 0) {
+				for(var i: uint = 0; i < pointsCount; i++) {
+					var cp: CellPoint = _points[i];
+					fin = checkPoint(cp, a, game, pointsAcc)&&fin;
 				}
-				/*else{
-					if(_points[i].size() < 0.99) 
-						_points[i].increaseSize();
-				}*/
+			} else {
+				while(pointsAcc.length != 0) {
+					var cp: CellPoint = pointsAcc.pop();
+					fin = checkPoint(cp, a, game, tPointsAcc)&&fin;
+				}
+				var tArr: Array = pointsAcc;
+				pointsAcc = tPointsAcc;
+				tPointsAcc = tArr;
 			}
 			return fin;
 		}
@@ -97,8 +121,11 @@
 				bmp = new BitmapData(4 * _size, 4 * _size, true, 0);
 		}
 
-		public function recovery(game: Game, ...cells: Array) {
-			var fin:Boolean = true;
+		public function recovery() {
+			for(var i: uint = 0; i < pointsCount; i++) {
+				_points[i].setSize(1);
+			}
+			/*var fin:Boolean = true;
 			var tfin:Boolean = false;
 			var l: uint = cells.length;
 			for(var i: uint = 0; i < pointsCount; i++) {
@@ -128,6 +155,7 @@
 				}
 			}
 			return fin;
+		*/
 		}
 
 		public function smooth() {
