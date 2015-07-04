@@ -10,15 +10,13 @@
 
 	public class Cell extends Body {
 
-		private var maxX = 50000;
-		private var maxY = 50000;
+		private var maxX:Number = 50000;
+		private var maxY:Number = 50000;
 		protected var _points: Array = new Array();
 		protected var pointsCount: uint;
 		protected var color: Number;
 		protected var _name: CellName;
 		private var _mass: CellName;
-		public var curX = 0;
-		public var curY = 0;
 
 		public function Cell(_x: Number, _y: Number, size: Number, color: Number = 0x0000FF, _isVir: Boolean = false, nd: Boolean = true, md: Boolean = false, nickname: String = "Cell") {
 			this.x = _x;
@@ -29,8 +27,8 @@
 
 			var _thornCoeff: Number = 1;
 			pointsCount = 2 * Math.floor(Math.sqrt(10 * _size));
-			var k = 2 * Math.PI / pointsCount;
-			for(var i: Number = 0; i < pointsCount; i++) {
+			var k:Number = 2 * Math.PI / pointsCount;
+			for(var i: uint = 0; i < pointsCount; i++) {
 				_thornCoeff = (i % 2) && _isVir ? 0.8 : 1;
 				_points.push(new CellPoint(_size * Math.sin(i * k) * _thornCoeff, _size * Math.cos(i * k) * _thornCoeff));
 			}
@@ -64,12 +62,12 @@
 		}
 
 		public function hTest(game: Game, a: Body): Boolean {
-			var fin = true;
+			var fin:Boolean = true;
 
 			a.bmp.fillRect(a.bmp.rect, 0);
 			a.bmp.draw(a.buf, a.m);
-			for(var i: Number = 0; i < pointsCount; i++) {
-				if(_points[i].size() > 0.2)
+			for(var i: uint = 0; i < pointsCount; i++) {
+				if(_points[i].size() > 0.35)
 					if(a.bmp.hitTest(new Point(a.x - a.csize, a.y - a.csize), 0xFF, new Point(_points[i].sx() + this.x, _points[i].sy() + this.y))) {
 						_points[i].decreaseSize();
 						fin = false;
@@ -78,8 +76,7 @@
 					(_points[i].sx() + this.x > game.crb) ||
 					(_points[i].sy() + this.y < game.ctb) ||
 					(_points[i].sy() + this.y > game.cbb)) {
-					_points[i].decreaseSize();
-						trace(game.clb);
+					_points[i].decreaseSize();												
 					fin = false;
 				}
 				/*else{
@@ -101,10 +98,10 @@
 		}
 
 		public function recovery(game: Game, ...cells: Array) {
-			var fin = true;
-			var tfin = false;
+			var fin:Boolean = true;
+			var tfin:Boolean = false;
 			var l: uint = cells.length;
-			for(var i: Number = 0; i < pointsCount; i++) {
+			for(var i: uint = 0; i < pointsCount; i++) {
 				if((_points[i].ssx(10) + this.x > game.clb) &&
 					(_points[i].ssx(10) + this.x < game.crb) &&
 					(_points[i].ssy(10) + this.y > game.ctb) &&
@@ -134,7 +131,7 @@
 		}
 
 		public function smooth() {
-			for(var i: Number = 0; i < pointsCount; i++) {
+			for(var i: uint = 0; i < pointsCount; i++) {
 				_points[i].setSize((_points[(i + pointsCount - 1) % pointsCount].size() + _points[(i + pointsCount - 2) % pointsCount].size() + _points[(i + 1) % pointsCount].size() + _points[(i + 2) % pointsCount].size() + 4 * _points[i].size()) / 8);
 			}
 		}
@@ -146,7 +143,7 @@
 			rounderObject.graphics.lineStyle(3, color + 0x006600);
 			rounderObject.graphics.moveTo(_points[0].sx(), _points[0].sy());
 
-			for(var i: Number = 0; i < pointsCount; i++) {
+			for(var i: uint = 0; i < pointsCount; i++) {
 				rounderObject.graphics.lineTo(_points[i].sx(), _points[i].sy());
 			}
 		}
@@ -158,7 +155,7 @@
 			buf.graphics.lineStyle(10, color + 0x006600);
 			buf.graphics.moveTo(_points[0].sx(), _points[0].sy());
 
-			for(var i: Number = 0; i < pointsCount; i++) {
+			for(var i: uint = 0; i < pointsCount; i++) {
 				buf.graphics.lineTo(_points[i].sx(), _points[i].sy());
 			}
 

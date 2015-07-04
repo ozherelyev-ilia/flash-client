@@ -75,7 +75,7 @@
 		
 		private var bckg:Sprite = null;
 		private var world:Sprite = new Sprite();
-		private var playerCellsInstances = new Sprite();
+		private var playersCellsInstances = new Sprite();
 		private var msgBox:ShortMessageBox = new ShortMessageBox();
 		private var menu:Menu;
 		private var curFrame:uint = 0;
@@ -83,7 +83,7 @@
 		private var idArr = new Array();
 		private var nnArr = new Array();
 		
-		private var tb = 0, lb = 0, rb = 1500, bb = 1500;
+		private var tb = 0, lb = 0, rb = 2505, bb = 2505;
 		public var ctb = 0, clb = 0, crb = 5000, cbb = 5000;
 		
 		private var chartWindow:Chart = new Chart();
@@ -91,6 +91,10 @@
 		private var vkapi:VkApi;
 		private var curMsg:Message;
 		private var nextMsg:Message;
+		
+		private var period;
+		
+		private var koeff:Number = 10;
 		
 		//---------------------------------------
 		// CONSTRUCTOR
@@ -116,8 +120,8 @@
 			bckg.cacheAsBitmap = true;
 			vkapi = new VkApi(stage);
 			addChildAt(bckg,0);
-			addChildAt(world,1);
-			addChildAt(playerCellsInstances,2);
+			addChildAt(world,2);
+			addChildAt(playersCellsInstances,1);
 			addChildAt(msgBox,3);
 			msgBox.visible = false;
 			msgBox.y = stage.stageHeight - msgBox.height;
@@ -192,7 +196,7 @@
 			} 
 		}
 
-private function init(event: Event): void {
+		private function init(event: Event): void {
 			if (event != null) {
 				removeEventListener(Event.ADDED_TO_STAGE, init);
 			}
@@ -293,7 +297,7 @@ private function init(event: Event): void {
 		private function handleJoin(connection: Connection): void {
 
 			if (connection != null) this.connection = connection;
-
+			vkapi.visible = false;
 			stage.addEventListener(MouseEvent.MOUSE_DOWN, buttonPressed);
 			stage.addEventListener(MouseEvent.MOUSE_UP, buttonReleased);
 
@@ -361,28 +365,19 @@ private function init(event: Event): void {
 		}
 		
 		private function onEnterFrame(e: Event) {
-			if(inbetween == 0){
-				while(messages[0].getNumber(0) < curFrame-10)
-					messages.shift();
-				checkMessages();
-				
-				world.x = 0;
-				world.y = 0;
-				drawWorld(curMsg);
-				curFrame = curMsg.getNumber(0) + 10;
-			} else {
-				var dx = (nextMsg.getNumber(1) - curMsg.getNumber(1))/2/xArea*stage.stageWidth;
-				var dy = (nextMsg.getNumber(2) - curMsg.getNumber(2))/2/yArea*stage.stageHeight;
-				bckg.x -= dx;
-				bckg.y -= dy;
-				world.x -= dx;
-				world.y -= dy;
-				curFrame++;
-			}
-			inbetween++;
 
-			if (inbetween == 2)
+			var dx = (nextMsg.getNumber(1) - lastX)/koeff;
+			var dy = (nextMsg.getNumber(2) - lastY)/koeff;
+			var sdx = dx/xArea*stage.stageWidth;
+			var sdy = dy/yArea*stage.stageHeight;
+			drawWorld(nextMsg, dx, dy);
+			
+			/*inbetween++;
+
+			if (inbetween == period){
 				inbetween = 0;
+				curFrame++;
+			}*/
 			/*if(fsu!=0){
 				while (fsu > 5){
 					fsu--;
@@ -396,15 +391,13 @@ private function init(event: Event): void {
 			//ping.text = String(fsu);
 		}
 		
-		private function drawWorld(m:Message){
+		private function drawWorld(m:Message, dx:Number = 0, dy:Number = 0){
 			world.removeChildren();
-			playerCellsInstances.removeChildren();
-			xArea = m.getInt(3);
-			yArea = m.getInt(4);
-			var curX: Number = m.getNumber(1);
-			var curY: Number = m.getNumber(2);
-			lastX = curX;
-			lastY = curY;
+			playersCellsInstances.removeChildren();
+			xArea = 284;m.getInt(3);
+			yArea = 214;m.getInt(4);
+			var curX: Number = lastX + dx;
+			var curY: Number = lastY + dy;
 			var xm:Number = stage.stageWidth/xArea;
 			var ym:Number = stage.stageHeight/yArea;
 			bckg.x = -(curX*xm)%30;
@@ -420,7 +413,7 @@ private function init(event: Event): void {
 			clb = (lb+xa)*xm;
 			crb = (rb+xa)*xm;
 			ctb = (tb+ya)*ym;
-			cbb = (bb+xa)*ym;
+			cbb = (bb+ya)*ym;
 			for (i = 5; i < m.length; i += 4) {
 				var id = m.getInt(i);
 				var _gx = m.getNumber(i+1);
@@ -495,8 +488,15 @@ private function init(event: Event): void {
 						cell = waitingCells[String(id)].shift();
 						if (waitingCells[String(id)].length == 0)
 							delete waitingCells[String(id)];
-						cell.x = _x;
-						cell.y = _y;
+						if (String(id) == m.getString(5)){
+							var ddx = ((_gx + xArea/2 - m.getNumber(1))*xm-cell.x)/koeff;
+							var ddy = ((_gy + yArea/2 - m.getNumber(2))*ym-cell.y)/koeff;
+							cell.x += ddx
+							cell.y += ddy;
+						} else {
+							cell.x = _x;
+							cell.y = _y;
+						}
 						cell.csize = size;
 					}
 
@@ -508,12 +508,11 @@ private function init(event: Event): void {
 					if (renderedCells[String(id)] == undefined)
 						renderedCells[String(id)] = new Vector.<Cell>();
 					renderedCells[String(id)].push(cell);
-					if (String(id) == m.getString(5))
-						playerCellsInstances.addChild(cell);
-					else
-						world.addChild(cell);
+					playersCellsInstances.addChild(cell);
 				}
 			}
+			lastX = curX;
+			lastY = curY;
 			waitingCells = renderedCells;
 			waitingVirAndPlasm = renderedVirAndPlasm;
 			renderedCells = new Object();
@@ -525,6 +524,8 @@ private function init(event: Event): void {
 					var ahtb:Boolean = s.hTest(this, cell);
 					var bhta:Boolean = cell.hTest(this, s);
 				} while(!(ahtb&&bhta));
+				s.smooth();
+				cell.smooth();
 				s.draw();
 				cell.draw();
 			}
@@ -536,12 +537,15 @@ private function init(event: Event): void {
 		//13 - вирус
 		//Всё что от 1001 и более - клетка (1000 + номер игрока, это чтобы различать игроков)
 		private function update(m: Message): void {
-			messages.push(m);
+			if(fsu == 0){
+				lastX = m.getNumber(1);
+				lastY = m.getNumber(2);
+				drawWorld(m);
+			}
+			if (fsu > 0)
+				nextMsg = m;
 			fsu++;
-			if (fsu == 5){
-				curFrame = m.getNumber(0);
-				curMsg = messages[0];
-				nextMsg = messages[1];
+			if (fsu == 2){
 				addEventListener(Event.ENTER_FRAME, onEnterFrame);
 			} //else if (fsu > 5){
 				//curFrame = m.getNumber(0);
