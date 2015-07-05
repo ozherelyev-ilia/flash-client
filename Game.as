@@ -245,8 +245,8 @@
 			connection.removeMessageHandler("currentState", playerDead);
 			connection.removeMessageHandler("playerDead", playerDead);
 			connection.disconnect();
-			//this.stopAllMovieClips();
-			//menu.startNew();
+			this.stopAllMovieClips();
+			menu.startNew();
 		}
 
 
