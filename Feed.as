@@ -50,11 +50,11 @@
 				this.color = 0xFFFF33;
 				break;
 		}
-			/*var k = 2 * Math.PI / Math.floor(Math.sqrt(20*_size));
-			for (var i: Number = 0; i < Math.floor(Math.sqrt(20*_size)); i++) {
+			/*var k = 2 * Math.PI / 5;
+			for (var i: Number = 0; i < 5; i++) {
 				_points.push(new CellPoint(_size * Math.sin(i * k), _size * Math.cos(i * k)));
-			}*/
-		
+			}
+		*/
 			
 
 			rounderObject = new Shape();
@@ -74,9 +74,9 @@
 
 			rounderObject.graphics.beginFill(color);
 			rounderObject.graphics.lineStyle(1, color + 0x001100);
-			/*rounderObject.graphics.moveTo(_points[0].sx(), _points[0].sy());
+			rounderObject.graphics.moveTo(_points[0].sx(), _points[0].sy());
 
-			for (var i: Number = 0; i < Math.floor(Math.sqrt(20 * _size)); i++) {
+			/*for (var i: Number = 0; i < 5; i++) {
 				rounderObject.graphics.lineTo(_points[i].sx(), _points[i].sy());
 			}*/
 			rounderObject.graphics.drawCircle(0,0,_size);

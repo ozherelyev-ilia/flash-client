@@ -94,7 +94,7 @@
 		
 		private var period;
 		
-		private var koeff:Number = 10;
+		private var koeff:Number = 8;
 		
 		//---------------------------------------
 		// CONSTRUCTOR
@@ -317,6 +317,7 @@
 			connection.addMessageHandler("saying", onMessageGot);
 			connection.addMessageHandler("playerDead", playerDead);
 			connection.send("setNickname", nickName);
+			connection.send("playersListRequest");
 		}
 		private function onMessageGot(m: Message){
 			var pid:int = m.getInt(0);
