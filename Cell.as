@@ -137,6 +137,7 @@
 		public function recovery() {
 			for(var i: uint = 0; i < pointsCount; i++) {
 				_points[i].setSize(1);
+				draw();
 			}
 			/*var fin:Boolean = true;
 			var tfin:Boolean = false;
