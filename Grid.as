@@ -22,9 +22,9 @@
 				shape.graphics.lineTo(kordX, yM);
 				addChild(shape);
 			}
-			for(var i: int = 0; i < lineY; i++) {
+			for(i = 0; i < lineY; i++) {
 				var kordY: int = i * size;
-				var shape: Shape = new Shape();
+				shape = new Shape();
 				shape.graphics.lineStyle(1, 0xDDDDDD);
 				shape.graphics.moveTo(0, kordY);
 				shape.graphics.lineTo(xM, kordY);

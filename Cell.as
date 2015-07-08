@@ -32,10 +32,10 @@
 			this.color = _isVir ? 0x00FF00 : color;
 
 			var _thornCoeff: Number = 1;
-			pointsCount = 2 * Math.floor(Math.sqrt(10 * _size));
+			pointsCount = 2 * Math.floor(Math.sqrt(20 * _size));
 			var k: Number = 2 * Math.PI / pointsCount;
 			for(var i: uint = 0; i < pointsCount; i++) {
-				_thornCoeff = (i % 2) && _isVir ? 0.8 : 1;
+				_thornCoeff = (i % 2) && _isVir ? 0.9 : 1;
 				_points.push(new CellPoint(_size * Math.sin(i * k) * _thornCoeff, _size * Math.cos(i * k) * _thornCoeff));
 			}
 			rounderObject = new Shape();
@@ -67,40 +67,56 @@
 
 		}
 
-		private function checkPoint(cp: CellPoint, a: Cell, game: Game, _pointsAcc: Array): Boolean {
-			if(cp.size() > 0.55) {
+		private function checkPoint(cp: CellPoint, a: Cell, _pointsAcc: Array): Boolean {
+			if(cp.size() > 0.75) {
 				p1.setTo(a.x - a.csize, a.y - a.csize);
 				p2.setTo(cp.sx() + x, cp.sy() + y);
 				if(a.bmp.hitTest(p1, 0xFF, p2)) {
-					cp.decreaseSize(0.05);
+					cp.decreaseSize(0.01);
 					_pointsAcc.push(cp);
 					return false;
 				}
-				if((cp.sx() + this.x < game.clb) ||
-					(cp.sx() + this.x > game.crb) ||
-					(cp.sy() + this.y < game.ctb) ||
-					(cp.sy() + this.y > game.cbb)) {
-					cp.decreaseSize(0.05);
-					_pointsAcc.push(cp);
-					return false;
-				}
-			} else {
-				if((cp.sx() + this.x < game.clb) ||
-					(cp.sx() + this.x > game.crb) ||
-					(cp.sy() + this.y < game.ctb) ||
-					(cp.sy() + this.y > game.cbb)) {
-					cp.decreaseSize(0.05);
-					_pointsAcc.push(cp);
-					return false;
-				} else {
-					cp.setSize(1);
-					pointsAcc.length = 0;
-				}
+			}
+			/*else {
+				cp.setSize(1);
+			}*/
+			return true;
+		}
+
+		private function checkBound(cp: CellPoint, game: Game, _pointsAcc: Array): Boolean {
+			if((cp.sx() + this.x < game.clb) ||
+				(cp.sx() + this.x > game.crb) ||
+				(cp.sy() + this.y < game.ctb) ||
+				(cp.sy() + this.y > game.cbb)) {
+				cp.decreaseSize(0.05);
+				_pointsAcc.push(cp);
+				return false;
 			}
 			return true;
 		}
 
-		public function hTest(game: Game, a: Cell): Boolean {
+		public function hbTest(game: Game) {
+			var fin: Boolean = false;
+			while(!fin) {
+				fin = true;
+				if(pointsAcc.length == 0) {
+					for(var i: uint = 0; i < pointsCount; i++) {
+						var cp: CellPoint = _points[i];
+						fin = checkBound(cp, game, pointsAcc) && fin;
+					}
+				} else {
+					while(pointsAcc.length != 0) {
+						var cp: CellPoint = pointsAcc.pop();
+						fin = checkBound(cp, game, tPointsAcc) && fin;
+					}
+					var tArr: Array = pointsAcc;
+					pointsAcc = tPointsAcc;
+					tPointsAcc = tArr;
+				}
+			}
+		}
+
+		public function hTest(a: Cell): Boolean {
 			var fin: Boolean = true;
 
 			a.bmp.fillRect(a.bmp.rect, 0);
@@ -109,12 +125,12 @@
 			if(pointsAcc.length == 0) {
 				for(var i: uint = 0; i < pointsCount; i++) {
 					var cp: CellPoint = _points[i];
-					fin = checkPoint(cp, a, game, pointsAcc) && fin;
+					fin = checkPoint(cp, a, pointsAcc) && fin;
 				}
 			} else {
 				while(pointsAcc.length != 0) {
-					var cp: CellPoint = pointsAcc.pop();
-					fin = checkPoint(cp, a, game, tPointsAcc) && fin;
+					cp = pointsAcc.pop();
+					fin = checkPoint(cp, a, tPointsAcc) && fin;
 				}
 				var tArr: Array = pointsAcc;
 				pointsAcc = tPointsAcc;

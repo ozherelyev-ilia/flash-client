@@ -82,7 +82,7 @@
 		private var idArr = new Array();
 		private var nnArr = new Array();
 		
-		private var tb = 0, lb = 0, rb = 2505, bb = 2505;
+		private var tb = -10, lb = -10, rb = 2515, bb = 2515;
 		public var ctb = 0, clb = 0, crb = 5000, cbb = 5000;
 		
 		private var chartWindow:Chart = new Chart();
@@ -310,6 +310,8 @@
 			connection.addMessageHandler("newPlayer", newPlayerJoined); // Добавление обработчика сообщения о присоединении нового игрока
 			connection.addMessageHandler("playerLeft", playerLeft); // Добавление обработчика сообщения о уходе какого-либо игрока
 			*/
+			connection.send("playersListRequest");
+			connection.send("setNickname", nickName);
 			connection.addMessageHandler("mouseRequest", sendMouseXY); // Добавление обработчика сообщения-запроса текущих координат мыши
 
 			connection.addMessageHandler("currentState", update);
@@ -317,8 +319,8 @@
 			connection.addMessageHandler("playersList", playersList);
 			connection.addMessageHandler("saying", onMessageGot);
 			connection.addMessageHandler("playerDead", playerDead);
-			connection.send("setNickname", nickName);
-			connection.send("playersListRequest");
+	
+			
 		}
 		private function onMessageGot(m: Message){
 			var pid:int = m.getInt(0);
@@ -393,6 +395,7 @@
 		
 		private function drawWorld(m:Message, dx:Number = 0, dy:Number = 0){
 			world.removeChildren();
+			world.graphics.clear();
 			playersCellsInstances.removeChildren();
 			xArea = 284;m.getInt(3);
 			yArea = 214;m.getInt(4);
@@ -413,6 +416,14 @@
 			crb = (rb+xa)*xm;
 			ctb = (tb+ya)*ym;
 			cbb = (bb+ya)*ym;
+			
+			world.graphics.lineStyle(10,0);
+			world.graphics.moveTo(clb,ctb);
+			world.graphics.lineTo(crb,ctb);
+			world.graphics.lineTo(crb,cbb);
+			world.graphics.lineTo(clb,cbb);
+			world.graphics.lineTo(clb,ctb);
+			
 			for (i = 5; i < m.length; i += 4) {
 				var id = m.getInt(i);
 				var _gx = m.getNumber(i+1);
@@ -446,7 +457,7 @@
 					
 					for each (var c in waitingCells)
 						checkCollisions(plasm,c);
-					for each (var c in renderedCells)
+					for each (c in renderedCells)
 						checkCollisions(plasm,c);
 					checkCollisions(plasm, renderedVirAndPlasm);
 					renderedVirAndPlasm[String(_gx) + "x" +String(_gy)] = plasm;
@@ -465,7 +476,7 @@
 					
 					for each (var c in waitingCells)
 						checkCollisions(virus,c);
-					for each (var c in renderedCells)					
+					for each (c in renderedCells)					
 						checkCollisions(virus,c);
 					checkCollisions(virus, renderedVirAndPlasm);
 					renderedVirAndPlasm[String(_gx) + "x" +String(_gy)] = virus;
@@ -498,24 +509,33 @@
 			}
 			lastX = curX;
 			lastY = curY;
+			for each (var ca in renderedCells){
+				for each (var cc in ca){
+					cc.hbTest(this);
+					cc.smooth();
+					cc.draw();
+				}
+			}
+			for each (ca in renderedVirAndPlasm){
+					ca.hbTest(this);
+					ca.smooth();
+					ca.draw();
+			}
 			waitingCells = renderedCells;
 			waitingVirAndPlasm = renderedVirAndPlasm;
 			renderedCells = new Object();
 			renderedVirAndPlasm = new Object();
 		}
+		
 		public function checkCollisions(cell:Cell, cells:Object):void{
 			for each (var s:Cell in cells){
 				do {
-					var ahtb:Boolean = s.hTest(this, cell);
-					var bhta:Boolean = cell.hTest(this, s);
+					var ahtb:Boolean = s.hTest(cell);
+					var bhta:Boolean = cell.hTest(s);
+					s.drawToBuf();
+					cell.drawToBuf();
 				} while(!(ahtb&&bhta));
-				s.smooth();
-				s.smooth();
-				cell.smooth();
-				cell.smooth();
-				s.draw();//это можно попытаться вынести отсюда, вообще
 			}
-			cell.draw();
 		}
 		//В сообщении передается массив в котором последовательно идут: 1) айди объекта, 2) X, 3) Y, 4) радиус, далее айди следующего объекта и т.д. 
 		//Айди следующие: 
@@ -527,6 +547,7 @@
 			if(fsu == 0){
 				lastX = m.getNumber(1);
 				lastY = m.getNumber(2);
+				nextMsg = m;
 				drawWorld(m);
 			}
 			if (fsu > 0)

@@ -34,6 +34,8 @@
 		public function CellName(_size: Number = 10.0, _text: String = "") {
 			super();
 			this._size = _size;
+			if (_text == null)
+				_text = "Unknow cell";
 			this.textField.text = _text;
 
 			this.format1.font = "Verdana";
