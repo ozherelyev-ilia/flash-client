@@ -56,8 +56,7 @@
 		private var messages:Vector.<Message> = new Vector.<Message>();
 		private var wtime:int = 0;
 		
-		private var lastX:Number = 0;
-		private var lastY:Number = 0;
+		private var lastX:Number = 0, lastY:Number = 0, nextX:Number = 100, nextY:Number = 100;
 		private var xArea:int = 274;
 		private var yArea:int = 214;
 		
@@ -284,6 +283,8 @@
 		// отправка на сервер сообщения с текущими координатами мыши
 		// срабатывает как ответ на запрос "mouseRequest" с сервера, который поступает каждые 30 мс
 		function sendMouseXY(m: Message) {
+			nextX = m.getNumber(0);
+			nextY = m.getNumber(1);
 			if (connection != null) {
 				connection.send("currentMouse", lastX+(_display.mouseX-stage.stageWidth/2)/stage.stageWidth*xArea, lastY+(_display.mouseY-stage.stageHeight/2)/stage.stageHeight*yArea);
 			}
@@ -365,8 +366,8 @@
 		
 		private function onEnterFrame(e: Event) {
 
-			var dx = (nextMsg.getNumber(1) - lastX)/koeff;
-			var dy = (nextMsg.getNumber(2) - lastY)/koeff;
+			var dx = (nextX - lastX)/koeff;
+			var dy = (nextY - lastY)/koeff;
 			var sdx = dx/xArea*stage.stageWidth;
 			var sdy = dy/yArea*stage.stageHeight;
 			drawWorld(nextMsg, dx, dy);
@@ -398,7 +399,7 @@
 			var curX: Number = lastX + dx;
 			var curY: Number = lastY + dy;
 			var xm:Number = stage.stageWidth/xArea;
-			var ym:Number = stage.stageHeight/yArea;
+			var ym:Number = xm;
 			bckg.x = -(curX*xm)%30;
 			bckg.y = -(curY*ym)%30;
 			for (var i: int = 0; i < 10; i++) {
@@ -418,7 +419,7 @@
 				var _gy = m.getNumber(i+2);
 				var _x = (_gx + xa)*xm;
 				var _y = (_gy + ya)*ym;
-				var size = 3*m.getNumber(i + 3);
+				var size = 3*m.getNumber(i + 3)*xm;
 				if (id < 10) {
 					var feed: Feed;
 					if (_feedPtr[id] == _feed[id].length) {
@@ -479,15 +480,10 @@
 						cell = waitingCells[String(id)].shift();
 						if (waitingCells[String(id)].length == 0)
 							delete waitingCells[String(id)];
-						if (String(id) == m.getString(5)){
-							var ddx = ((_gx + xArea/2 - m.getNumber(1))*xm-cell.x)/koeff;
-							var ddy = ((_gy + yArea/2 - m.getNumber(2))*ym-cell.y)/koeff;
-							cell.x += ddx
-							cell.y += ddy;
-						} else {
-							cell.x = _x;
-							cell.y = _y;
-						}
+						var ddx = ((_gx + xArea/2 - m.getNumber(1))*xm-cell.x)/koeff;
+						var ddy = ((_gy + yArea/2 - m.getNumber(2))*ym-cell.y)/koeff;
+						cell.x += ddx
+						cell.y += ddy;
 						cell.recovery();
 						cell.csize = size;
 					}
@@ -514,6 +510,8 @@
 					var bhta:Boolean = cell.hTest(this, s);
 				} while(!(ahtb&&bhta));
 				s.smooth();
+				s.smooth();
+				cell.smooth();
 				cell.smooth();
 				s.draw();//это можно попытаться вынести отсюда, вообще
 			}

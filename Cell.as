@@ -68,7 +68,7 @@
 		}
 
 		private function checkPoint(cp: CellPoint, a: Cell, game: Game, _pointsAcc: Array): Boolean {
-			if(cp.size() > 0.35) {
+			if(cp.size() > 0.55) {
 				p1.setTo(a.x - a.csize, a.y - a.csize);
 				p2.setTo(cp.sx() + x, cp.sy() + y);
 				if(a.bmp.hitTest(p1, 0xFF, p2)) {
@@ -84,6 +84,18 @@
 					_pointsAcc.push(cp);
 					return false;
 				}
+			} else {
+				if((cp.sx() + this.x < game.clb) ||
+					(cp.sx() + this.x > game.crb) ||
+					(cp.sy() + this.y < game.ctb) ||
+					(cp.sy() + this.y > game.cbb)) {
+					cp.decreaseSize(0.05);
+					_pointsAcc.push(cp);
+					return false;
+				} else {
+					cp.setSize(1);
+					pointsAcc.length = 0;
+				}
 			}
 			return true;
 		}
@@ -97,12 +109,12 @@
 			if(pointsAcc.length == 0) {
 				for(var i: uint = 0; i < pointsCount; i++) {
 					var cp: CellPoint = _points[i];
-					fin = checkPoint(cp, a, game, pointsAcc)&&fin;
+					fin = checkPoint(cp, a, game, pointsAcc) && fin;
 				}
 			} else {
 				while(pointsAcc.length != 0) {
 					var cp: CellPoint = pointsAcc.pop();
-					fin = checkPoint(cp, a, game, tPointsAcc)&&fin;
+					fin = checkPoint(cp, a, game, tPointsAcc) && fin;
 				}
 				var tArr: Array = pointsAcc;
 				pointsAcc = tPointsAcc;
@@ -112,13 +124,14 @@
 		}
 
 		public override function set csize(_size: Number) {
+			if(2 * _size > bmp.width) {
+				bmp = new BitmapData(4 * _size, 4 * _size, true, 0);
+			}
+			m.translate(_size - this._size, _size - this._size);
 			this._size = _size;
 			rounderObject.height = _size;
 			rounderObject.width = _size;
 			_name.setSize(_size);
-
-			if(2 * _size > bmp.width)
-				bmp = new BitmapData(4 * _size, 4 * _size, true, 0);
 		}
 
 		public function recovery() {

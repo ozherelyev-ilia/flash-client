@@ -24,30 +24,16 @@
 		}
 
 		private function hitTest(e: Event): void {
-			var fin = false;
-			while (!fin) {
-				fin = first.recovery(second);
-				first.drawToBuf();
-				fin = second.recovery(first) && fin;
-				second.drawToBuf();
-			}
-			fin = false;
-			while (!fin) {
-				fin = first.hTest(second);
-				first.drawToBuf();
-				fin = second.hTest(first) && fin;
-				second.drawToBuf();
-			}
-			f1.smooth();
+			first.recovery();
+			second.recovery();
+			do {
+				var ahtb: Boolean = first.hTest(second);
+				var bhta: Boolean = second.hTest(first);
+			} while (!(ahtb && bhta));
 			first.smooth();
 			second.smooth();
-			/*first.drawToBuf();
-			second.drawToBuf();
-			*/
-			f1.draw();
 			first.draw();
 			second.draw();
-
 		}
 	}
 
