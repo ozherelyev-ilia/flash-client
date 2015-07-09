@@ -1,4 +1,4 @@
-﻿package {
+package {
 	import flash.geom.Point;
 	import flash.display.Sprite;
 	import flash.display.Shape;
@@ -66,6 +66,56 @@
 			draw();
 
 		}
+		
+		public static function hitCells(a: Cell, b: Cell):void{
+			//trace("1")
+			var aX:Number = a.x;
+			var aY:Number = a.y;
+			var aSize:Number = a._size;
+			
+			var bX:Number = b.x;
+			var bY:Number = b.y;
+			var bSize:Number = b._size;
+			
+			var dist:Number = Math.sqrt((aX - bX)*(aX - bX) + (aY - bY)*(aY - bY));
+			if (dist >= bSize + aSize){
+				//return a;
+				return;
+			}
+			bSize *= bSize;
+			aSize *= aSize;
+			//trace("2")
+			var radius:Number;
+			var apX:Number;
+			var apY:Number;
+			//trace("3")
+			for (var i:int = 0; i < a._points.length; i += 1){
+				//trace("4")
+				apX = a._points[i].sx() + aX;
+				//trace("4.1")
+				apY = a._points[i].sy() + aY;
+				//trace("4.2")
+				dist = ((apX - bX)*(apX - bX) + (apY - bY)*(apY - bY))/bSize;
+				//trace("4.3")
+				if (dist > 1){
+					continue;
+				}
+				//trace("5")
+				radius = a._points[i].size();
+				while((dist < radius*radius) && (dist < 1) && (radius > 0.7)){
+					//trace("5")
+					a._points[i].decreaseSize(0.05);
+					radius -= 0.05;
+					apX = a._points[i].sx() + aX;
+					apY = a._points[i].sy() + aY;
+					dist = ((apX - bX)*(apX - bX) + (apY - bY)*(apY - bY))/bSize;
+					
+				}
+				//trace("6")
+			}
+			//return a;
+		}
+
 
 		private function checkPoint(cp: CellPoint, a: Cell, _pointsAcc: Array): Boolean {
 			if(cp.size() > 0.75) {
