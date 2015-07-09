@@ -74,6 +74,7 @@
 		
 		private var bckg:Sprite = null;
 		private var world:Sprite = new Sprite();
+		private var feedSpr:Sprite = new Sprite;
 		private var playersCellsInstances = new Sprite();
 		private var msgBox:ShortMessageBox = new ShortMessageBox();
 		private var menu:Menu;
@@ -82,7 +83,7 @@
 		private var idArr = new Array();
 		private var nnArr = new Array();
 		
-		private var tb = -10, lb = -10, rb = 2515, bb = 2515;
+		private var tb = 0, lb = 0, rb = 2505, bb = 2505;
 		public var ctb = 0, clb = 0, crb = 5000, cbb = 5000;
 		
 		private var chartWindow:Chart = new Chart();
@@ -119,9 +120,10 @@
 			bckg.cacheAsBitmap = true;
 			vkapi = new VkApi(stage);
 			addChildAt(bckg,0);
-			addChildAt(world,2);
-			addChildAt(playersCellsInstances,1);
-			addChildAt(msgBox,3);
+			addChildAt(world,3);
+			addChildAt(playersCellsInstances,2);
+			addChildAt(feedSpr,1);
+			addChildAt(msgBox,4);
 			msgBox.visible = false;
 			msgBox.y = stage.stageHeight - msgBox.height;
 			chartWindow.visible = true;
@@ -395,6 +397,7 @@
 		
 		private function drawWorld(m:Message, dx:Number = 0, dy:Number = 0){
 			world.removeChildren();
+			feedSpr.removeChildren();
 			world.graphics.clear();
 			playersCellsInstances.removeChildren();
 			xArea = 284;m.getInt(3);
@@ -441,7 +444,7 @@
 						feed.x = _x;
 						feed.y = _y;
 					}
-					world.addChildAt(feed, 0);
+					feedSpr.addChildAt(feed, 0);
 					_feedPtr[id] += 1;
 				} else if(id == 11){
 					var plasm: Protoplasm = waitingVirAndPlasm[String(_gx) + "x" +String(_gy)];

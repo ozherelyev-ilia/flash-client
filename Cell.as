@@ -145,9 +145,10 @@
 			}
 			m.translate(_size - this._size, _size - this._size);
 			this._size = _size;
-			rounderObject.height = _size;
-			rounderObject.width = _size;
-			_name.setSize(_size);
+			rounderObject.height = 2*_size;
+			rounderObject.width = 2*_size;
+			if (_name!= null)
+				_name.setSize(_size);
 		}
 
 		public function recovery() {
@@ -194,7 +195,7 @@
 		}
 
 		public function draw() {
-			drawToBuf();
+			//drawToBuf();
 			rounderObject.graphics.clear();
 			rounderObject.graphics.beginFill(color);
 			rounderObject.graphics.lineStyle(3, color + 0x006600);
@@ -209,7 +210,7 @@
 			buf.graphics.clear();
 
 			buf.graphics.beginFill(color);
-			buf.graphics.lineStyle(10, color + 0x006600);
+			buf.graphics.lineStyle(3, color + 0x006600);
 			buf.graphics.moveTo(_points[0].sx(), _points[0].sy());
 
 			for(var i: uint = 0; i < pointsCount; i++) {
