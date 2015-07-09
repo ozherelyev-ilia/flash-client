@@ -84,11 +84,11 @@
 		}
 
 		private function checkBound(cp: CellPoint, game: Game, _pointsAcc: Array): Boolean {
-			if((cp.sx() + this.x < game.clb) ||
-				(cp.sx() + this.x > game.crb) ||
-				(cp.sy() + this.y < game.ctb) ||
-				(cp.sy() + this.y > game.cbb)) {
-				cp.decreaseSize(0.05);
+			if((cp.sx()*1.421 + this.x < game.clb) ||
+				(cp.sx()*1.421 + this.x > game.crb) ||
+				(cp.sy()*1.421 + this.y < game.ctb) ||
+				(cp.sy()*1.421 + this.y > game.cbb)) {
+				cp.decreaseSize(0.01);
 				_pointsAcc.push(cp);
 				return false;
 			}
@@ -101,8 +101,8 @@
 				fin = true;
 				if(pointsAcc.length == 0) {
 					for(var i: uint = 0; i < pointsCount; i++) {
-						var cp: CellPoint = _points[i];
-						fin = checkBound(cp, game, pointsAcc) && fin;
+						//var cp: CellPoint = _points[i];
+						fin = checkBound(_points[i], game, pointsAcc) && fin;
 					}
 				} else {
 					while(pointsAcc.length != 0) {
