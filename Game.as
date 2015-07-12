@@ -1,4 +1,4 @@
-﻿package {
+package {
 	import playerio.*;
 	import flash.display.Sprite;
 	import flash.events.Event;
@@ -452,8 +452,10 @@
 						plasm = new Protoplasm(_x, _y, size, 0x00FF00);
 					} else {
 						delete waitingVirAndPlasm[String(_gx) + "x" +String(_gy)];
-						plasm.x = _x;
-						plasm.y = _y;
+						var ddx = ((_gx + xArea/2 - m.getNumber(1))*xm-plasm.x)/koeff;
+						var ddy = ((_gy + yArea/2 - m.getNumber(2))*ym-plasm.y)/koeff;
+						plasm.x += ddx
+						plasm.y += ddy;
 						plasm.csize = size;
 						plasm.recovery();
 					}
@@ -530,15 +532,17 @@
 			renderedVirAndPlasm = new Object();
 		}
 		
-		public function checkCollisions(cell:Cell, cells:Object):void{
+	public function checkCollisions(cell:Cell, cells:Object):void{
 			for each (var s:Cell in cells){
-				do {
-					var ahtb:Boolean = s.hTest(cell);
-					var bhta:Boolean = cell.hTest(s);
-					s.drawToBuf();
-					cell.drawToBuf();
-				} while(!(ahtb&&bhta));
+				Cell.hitCells(s,cell);
+				Cell.hitCells(cell,s);
+				s.smooth();
+				//s.smooth();
+				cell.smooth();
+				//cell.smooth();
+				s.draw();//это можно попытаться вынести отсюда, вообще
 			}
+			cell.draw();
 		}
 		//В сообщении передается массив в котором последовательно идут: 1) айди объекта, 2) X, 3) Y, 4) радиус, далее айди следующего объекта и т.д. 
 		//Айди следующие: 
