@@ -146,24 +146,32 @@ package {
 		}
 
 		public function hbTest(game: Game) {
-			var fin: Boolean = false;
-			while(!fin) {
-				fin = true;
-				if(pointsAcc.length == 0) {
-					for(var i: uint = 0; i < pointsCount; i++) {
-						//var cp: CellPoint = _points[i];
-						fin = checkBound(_points[i], game, pointsAcc) && fin;
-					}
-				} else {
-					while(pointsAcc.length != 0) {
-						var cp: CellPoint = pointsAcc.pop();
-						fin = checkBound(cp, game, tPointsAcc) && fin;
-					}
-					var tArr: Array = pointsAcc;
-					pointsAcc = tPointsAcc;
-					tPointsAcc = tArr;
+			var cX:Number = this.x;
+			var cY:Number = this.y;
+			var cSize:Number = this._size;
+
+			if (cX + cSize < game.crb && cX - cSize > game.clb && cY - cSize > game.ctb && cY + cSize < game.cbb){
+				return;
+			}
+			//trace("lol2")
+			//trace((cX > game.crb || cX < game.clb || cY < game.ctb || cY > game.cbb))
+			if (cX > game.crb  || cX < game.clb || cY < game.ctb || cY > game.cbb){
+				return;
+			}
+			//trace("lol1")
+			var pX;
+			var pY;
+			for (var i:int = 0; i < this._points.length; i += 1){
+				pX = this._points[i].sx() + cX;
+				pY = this._points[i].sy() + cY;
+				while((pX > game.crb || pX < game.clb || pY < game.ctb || pY > game.cbb) && (this._points[i].size() > 0.55)){
+					//trace("lol")
+					this._points[i].decreaseSize(0.05);
+					pX = this._points[i].sx() + cX;
+					pY = this._points[i].sy() + cY;
 				}
 			}
+
 		}
 
 		public function hTest(a: Cell): Boolean {
