@@ -1,4 +1,4 @@
-package {
+﻿package {
 	import playerio.*;
 	import flash.display.Sprite;
 	import flash.events.Event;
@@ -57,8 +57,9 @@ package {
 		private var wtime:int = 0;
 		
 		private var lastX:Number = 0, lastY:Number = 0, nextX:Number = 100, nextY:Number = 100;
-		private var xArea:int = 274;
-		private var yArea:int = 214;
+		private var xArea:Number = 274;
+		private var yArea:Number = 214;
+		private var lastxm:Number = 0;
 		
 		private var fsu:int = -1;
 		private var inbetween:uint = 0;
@@ -72,7 +73,7 @@ package {
 		
 		private var sMBShowed: Boolean = false;
 		
-		private var bckg:Sprite = null;
+		private var bckg:Grid = null;
 		private var world:Sprite = new Sprite();
 		private var feedSpr:Sprite = new Sprite;
 		private var playersCellsInstances = new Sprite();
@@ -400,14 +401,17 @@ package {
 			feedSpr.removeChildren();
 			world.graphics.clear();
 			playersCellsInstances.removeChildren();
-			xArea = 284;m.getInt(3);
-			yArea = 214;m.getInt(4);
+			xArea = m.getNumber(3);
+			yArea = m.getNumber(4);
 			var curX: Number = lastX + dx;
 			var curY: Number = lastY + dy;
-			var xm:Number = stage.stageWidth/xArea;
+			var xm:Number = (stage.stageWidth as Number)/xArea;
 			var ym:Number = xm;
-			bckg.x = -(curX*xm)%30;
-			bckg.y = -(curY*ym)%30;
+			bckg.x = -(curX*xm)%(17*xm);
+			bckg.y = -(curY*ym)%(17*ym);
+			if (xm!=lastxm)
+				bckg.drawWithSize(17*xm);//17.1 - это 45/startXm
+			lastxm = xm;
 			for (var i: int = 0; i < 10; i++) {
 				_feedPtr[i] = 0;
 			}
@@ -433,7 +437,7 @@ package {
 				var _gy = m.getNumber(i+2);
 				var _x = (_gx + xa)*xm;
 				var _y = (_gy + ya)*ym;
-				var size = 3*m.getNumber(i + 3)*xm;
+				var size = m.getNumber(i + 3)*xm;
 				if (id < 10) {
 					var feed: Feed;
 					if (_feedPtr[id] == _feed[id].length) {
@@ -446,12 +450,35 @@ package {
 					}
 					feedSpr.addChildAt(feed, 0);
 					_feedPtr[id] += 1;
-				} else if(id == 11){
-					var plasm: Protoplasm = waitingVirAndPlasm[String(_gx) + "x" +String(_gy)];
+				} else if (id > 3000) {
+					var virus: Cell = waitingVirAndPlasm[String(id)];
+					if (virus == undefined){
+						virus = new Cell(_x, _y, size, 0x00FF00, true);
+						
+					} else {
+						delete waitingVirAndPlasm[String(id)];
+						//var ddx = ((_gx + xArea/2 - m.getNumber(1))*xm-virus.x)/koeff;
+						//var ddy = ((_gy + yArea/2 - m.getNumber(2))*ym-virus.y)/koeff;
+						//virus.x += ddx
+						//virus.y += ddy;
+						virus.x = _gx;
+						virus.y = _gy;
+						virus.recovery();
+					}
+					
+					for each (var c in waitingCells)
+						checkCollisions(virus,c);
+					for each (c in renderedCells)					
+						checkCollisions(virus,c);
+					checkCollisions(virus, renderedVirAndPlasm);
+					renderedVirAndPlasm[String(id)] = virus;
+					world.addChild(virus);
+				} else if(id > 2000){
+					var plasm: Protoplasm = waitingVirAndPlasm[String(id)];
 					if (plasm == undefined){
 						plasm = new Protoplasm(_x, _y, size, 0x00FF00);
 					} else {
-						delete waitingVirAndPlasm[String(_gx) + "x" +String(_gy)];
+						delete waitingVirAndPlasm[String(id)];
 						var ddx = ((_gx + xArea/2 - m.getNumber(1))*xm-plasm.x)/koeff;
 						var ddy = ((_gy + yArea/2 - m.getNumber(2))*ym-plasm.y)/koeff;
 						plasm.x += ddx
@@ -465,27 +492,8 @@ package {
 					for each (c in renderedCells)
 						checkCollisions(plasm,c);
 					checkCollisions(plasm, renderedVirAndPlasm);
-					renderedVirAndPlasm[String(_gx) + "x" +String(_gy)] = plasm;
+					renderedVirAndPlasm[String(id)] = plasm;
 					world.addChild(plasm);
-				}else if (id == 13) {
-					var virus: Cell = waitingVirAndPlasm[String(_gx) + "x" +String(_gy)];
-					if (virus == undefined){
-						virus = new Cell(_x, _y, size, 0x00FF00, true);
-						
-					} else {
-						delete waitingVirAndPlasm[String(_gx) + "x" +String(_gy)];
-						virus.x = _x;
-						virus.y = _y;
-						virus.recovery();
-					}
-					
-					for each (var c in waitingCells)
-						checkCollisions(virus,c);
-					for each (c in renderedCells)					
-						checkCollisions(virus,c);
-					checkCollisions(virus, renderedVirAndPlasm);
-					renderedVirAndPlasm[String(_gx) + "x" +String(_gy)] = virus;
-					world.addChild(virus);
 				} else if (id > 1000) {
 					var cellArr:Vector.<Cell> = waitingCells[String(id)];
 					var cell:Cell;

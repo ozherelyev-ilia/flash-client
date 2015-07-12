@@ -8,27 +8,26 @@
 
 
 		public function Grid() {
-			addGrid(900,700,30);
+			graphics.lineStyle(1, 0xDDDDDD);
+			addGrid(900,700,45);
 		}
-
-		function addGrid(xM: int, yM: int, size: int): void {
+		public function drawWithSize(size:Number){
+			graphics.clear();
+			graphics.lineStyle(1, 0xDDDDDD);
+			addGrid(900,700,size);
+		}
+		function addGrid(xM: int, yM: int, size: Number): void {
 			var lineX: int = (xM / size);
 			var lineY: int = (yM / size);
 			for(var i: int = 0; i < lineX; i++) {
 				var kordX: int = i * size;
-				var shape: Shape = new Shape();
-				shape.graphics.lineStyle(1, 0xDDDDDD);
-				shape.graphics.moveTo(kordX, 0);
-				shape.graphics.lineTo(kordX, yM);
-				addChild(shape);
+				graphics.moveTo(kordX, 0);
+				graphics.lineTo(kordX, yM);
 			}
 			for(i = 0; i < lineY; i++) {
 				var kordY: int = i * size;
-				shape = new Shape();
-				shape.graphics.lineStyle(1, 0xDDDDDD);
-				shape.graphics.moveTo(0, kordY);
-				shape.graphics.lineTo(xM, kordY);
-				addChild(shape);
+				graphics.moveTo(0, kordY);
+				graphics.lineTo(xM, kordY);
 			}
 		}
 	}
