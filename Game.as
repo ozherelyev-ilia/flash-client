@@ -26,6 +26,7 @@
 		public var gameID: String = "cells2-5yrswumyieeskxfpoge6q";
 		public var userID: String;
 		public var connection: Connection;
+		private var cl:Client;
 		//---------------------------------------
 		// PRIVATE VARIABLES
 		//---------------------------------------
@@ -135,6 +136,8 @@
 			chartWindow.y = stage.stageHeight - chartWindow.height-vkapi.height;
 			addChild(vkapi);
 			vkapi.y = stage.stageHeight - vkapi.height;
+			PlayerIO.connect(stage, gameID, "public", userID, "", null, handleConnect, handleError);
+	
 		}
 
 		function mclick(e: MouseEvent) {
@@ -238,7 +241,17 @@
 		
 		public function goPlay():void{
 			menu.visible = false;
-			PlayerIO.connect(stage, gameID, "public", userID, "", null, handleConnect, handleError);
+			// Создаем или подключаемся к игровой комнате "test"
+			if(cl!=null)
+			cl.multiplayer.createJoinRoom(
+				"test", // Идентификатор комнаты. Если устаноить null то идентификатор будет присвоен случайный
+				"MyCode", // Тип игры запускаемый на сервере (привязка к серверному коду)
+				true, // Должна ли конмата видима в списке комнат? (client.multiplayer.listRooms)
+				{}, // Какие-либо данные. Эти данные будут возвращены в список комнат. Значения могут быть изменены на сервере.
+				{}, // Какие-либо данные пользователя.
+				handleJoin, // Указатель на метод который будет вызван при успешном подключении к комнате.
+				handleError // Указатель на метод который будет вызван в случаее ошибки подключения
+			);
 		}
 		
 		private function playerDead(m: Message):void{
@@ -258,21 +271,19 @@
 		// При успешном соединении:
 		private function handleConnect(client: Client): void {
 			trace("Connected to server!");
-
+			cl = client;
+			
 			// Устанавливаем подключение к локальному серверу для отладки
 			//client.multiplayer.developmentServer = "localhost:8184"; //Если закомментить эту строчку, то будет подключение на удаленный сервер
-
-			// Создаем или подключаемся к игровой комнате "test"
-			client.multiplayer.createJoinRoom(
+			cl.multiplayer.createJoinRoom(
 				"test", // Идентификатор комнаты. Если устаноить null то идентификатор будет присвоен случайный
 				"MyCode", // Тип игры запускаемый на сервере (привязка к серверному коду)
 				true, // Должна ли конмата видима в списке комнат? (client.multiplayer.listRooms)
 				{}, // Какие-либо данные. Эти данные будут возвращены в список комнат. Значения могут быть изменены на сервере.
-				{}, // Какие-либо данные пользователя.
+				{Type:"Spectator"}, // Какие-либо данные пользователя.
 				handleJoin, // Указатель на метод который будет вызван при успешном подключении к комнате.
 				handleError // Указатель на метод который будет вызван в случаее ошибки подключения
 			);
-
 			// создаем новую клетку
 			//var cell = new Cell();
 			//var cell = new Cell();
@@ -371,10 +382,15 @@
 		
 		private function onEnterFrame(e: Event) {
 
+			if(menu.visible){
+				nextX = nextMsg.getNumber(0);
+				nextY = nextMsg.getNumber(1);
+			}
 			var dx = (nextX - lastX)/koeff;
 			var dy = (nextY - lastY)/koeff;
 			var sdx = dx/xArea*stage.stageWidth;
 			var sdy = dy/yArea*stage.stageHeight;
+
 			drawWorld(nextMsg, dx, dy);
 			
 			/*inbetween++;
