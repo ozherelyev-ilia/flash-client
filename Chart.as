@@ -1,4 +1,4 @@
-﻿package
+package
 {
 	import flash.display.Sprite;
 	import fl.controls.Label;
@@ -11,12 +11,14 @@
 	public class Chart extends Sprite
 	{
 		private var txtArea:TextField = new TextField();
+		private var LAG:int = 5000;
+		//public  var txtArea1:TextField = new TextField();
 		private var msg:Array = new Array("", "", "", "", "");
-		private var timer1:Timer = new Timer(3000,0), 
-					timer2:Timer = new Timer(3000,0), 
-					timer3:Timer = new Timer(3000,0), 
-					timer4:Timer = new Timer(3000,0), 
-					timer5:Timer = new Timer(3000,0);
+		private var timer1:Timer = new Timer(LAG,0), 
+					timer2:Timer = new Timer(LAG,0), 
+					timer3:Timer = new Timer(LAG,0), 
+					timer4:Timer = new Timer(LAG,0), 
+					timer5:Timer = new Timer(LAG,0);
 		public var nMsg:int;
 		private var allText:String;
 		var format1: TextFormat = new TextFormat();
@@ -26,8 +28,10 @@
 			nMsg = 0;
 			//this.width = 850;
 			//this.height = 100;
-			txtArea.x=0;
-			txtArea.y=0;
+			txtArea.x = 0;
+			txtArea.y = 0;
+			//txtArea1.x = 0;
+			//txtArea1.y = -20;
 			txtArea.width = 200;
 			txtArea.height = 100;
 			format1.font = "Verdana";
@@ -36,10 +40,16 @@
 			txtArea.selectable = false;
 			txtArea.mouseEnabled = false;
 			txtArea.setTextFormat(format1);
+			//txtArea1.selectable = false;
+			//txtArea1.mouseEnabled = false;
+			//txtArea1.setTextFormat(format1);
 			//setMsg('12345678','01234567890123456789012345678901234567890123456789012345','ff0000');
 			txtArea.text = "Label";
 			//txtArea.htmlText = "";
+			txtArea.alpha = 0.6;
+			//txtArea1.text = "Label1";
 			addChild(txtArea);
+			//addChild(txtArea1);
 			//var a:int = 1024;
 			//trace(a.toString(16))
 			
@@ -51,35 +61,35 @@
 			{
 				case 0:
 					//trace("in 0")
-					timer1 = new Timer(3000,1);
+					timer1 = new Timer(LAG,1);
 					msg[0] = _msgText;
 					nMsg += 1;
 					timer1.addEventListener("timer", timerHandler);
 					timer1.start();
 				break;
 				case 1:
-					timer2 = new Timer(3000,1);
+					timer2 = new Timer(LAG,1);
 					msg[1] = _msgText;
 					nMsg += 1;
 					timer2.addEventListener("timer", timerHandler);
 					timer2.start();
 				break;
 				case 2:
-					timer3 = new Timer(3000,1);
+					timer3 = new Timer(LAG,1);
 					msg[2] = _msgText;
 					nMsg += 1;
 					timer3.addEventListener("timer", timerHandler);
 					timer3.start();
 				break;
 				case 3:
-					timer4 = new Timer(3000,1);
+					timer4 = new Timer(LAG,1);
 					msg[3] = _msgText;
 					nMsg += 1;
 					timer4.addEventListener("timer", timerHandler);
 					timer4.start();
 				break;
 				case 4:
-					timer5 = new Timer(3000,1);
+					timer5 = new Timer(LAG,1);
 					msg[4] = _msgText;
 					nMsg += 1;
 					timer5.addEventListener("timer", timerHandler);
@@ -90,7 +100,7 @@
 					timer2 = timer3;
 					timer3 = timer4;
 					timer4 = timer5;
-					timer5 = new Timer(3000,1);
+					timer5 = new Timer(LAG,1);
 					timer5.addEventListener("timer", timerHandler);
 					timer5.start();
 					msg[0] = msg[1];
@@ -115,7 +125,7 @@
 				timer2 = timer3;
 				timer3 = timer4;
 				timer4 = timer5;
-				timer5 = new Timer(3000,1);
+				timer5 = new Timer(LAG,1);
 				msg[0] = msg[1];
 				msg[1] = msg[2];
 				msg[2] = msg[3];
@@ -136,7 +146,7 @@
 			var textM:String = "<font color=\"#" + color + '">' + nickName + ":</font> " + _msg;
 			if (textM.length > 50)
 			{
-				textM = textM.substr(0,70) + '\n' + textM.substring(70,textM.length-1);
+				textM = textM.substr(0,70) + '\n' + textM.substring(71,textM.length-1);
 			}
 			_setMsg(textM);
 		}
