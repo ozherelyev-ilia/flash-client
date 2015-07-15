@@ -42,7 +42,7 @@
 		private var _cells: Vector.<Cell> = new Vector.<Cell> (); // Список клеток всех игроков
 		private var _throws: Vector.<CellChild> = new Vector.<CellChild> (); // Список отщепленных кормовых частиц с клетки
 		private var _viruses: Vector.<VirusCell> = new Vector.<VirusCell> (); // Список вирусов
-		private var _feed: Vector.<Vector.<Feed>> = new Vector.<Vector.<Feed>> ();
+		private var _feed: Object = new Object();
 		private var _feedPtr: Vector.<int> = new Vector.<int> ();
 		private var renderedCells:Object = new Object();
 		private var waitingCells:Object = new Object();
@@ -216,12 +216,12 @@
 			if (event != null) {
 				removeEventListener(Event.ADDED_TO_STAGE, init);
 			}
-
+/*
 			for (var i: int = 0; i < 10; i++) {
 				_feed[i] = new Vector.<Feed>();
 				_feedPtr[i] = 0;
 			}
-
+*/
 			_enviroment = new Sprite(); // Спрайт для кормовых точек
 			addChild(_enviroment);
 			_display = new Sprite(); // Спрайт для клеток игроков и вирусов
@@ -271,16 +271,18 @@
 			connection.removeMessageHandler("playersList", playersList);
 			connection.removeMessageHandler("saying", onMessageGot);
 			connection.removeMessageHandler("playerDead", playerDead);
+			
+			_feed = new Object();
 			if(cl!=null)
-			cl.multiplayer.createJoinRoom(
-				"test", // Идентификатор комнаты. Если устаноить null то идентификатор будет присвоен случайный
-				"MyCode", // Тип игры запускаемый на сервере (привязка к серверному коду)
-				true, // Должна ли конмата видима в списке комнат? (client.multiplayer.listRooms)
-				{}, // Какие-либо данные. Эти данные будут возвращены в список комнат. Значения могут быть изменены на сервере.
-				{}, // Какие-либо данные пользователя.
-				handleJoin, // Указатель на метод который будет вызван при успешном подключении к комнате.
-				handleError // Указатель на метод который будет вызван в случаее ошибки подключения
-			);
+				cl.multiplayer.createJoinRoom(
+					"test", // Идентификатор комнаты. Если устаноить null то идентификатор будет присвоен случайный
+					"MyCode", // Тип игры запускаемый на сервере (привязка к серверному коду)
+					true, // Должна ли конмата видима в списке комнат? (client.multiplayer.listRooms)
+					{}, // Какие-либо данные. Эти данные будут возвращены в список комнат. Значения могут быть изменены на сервере.
+					{}, // Какие-либо данные пользователя.
+					handleJoin, // Указатель на метод который будет вызван при успешном подключении к комнате.
+					handleError // Указатель на метод который будет вызван в случаее ошибки подключения
+				);
 		}
 		
 		private function playerDead(m: Message):void{
@@ -450,19 +452,16 @@
 			yArea = m.getNumber(4);
 			var curX: Number = lastX + dx;
 			var curY: Number = lastY + dy;
-			var xm:Number = (stage.stageWidth as Number)/xArea;
+			var xm:Number = ((stage.stageWidth as Number)+200)/xArea;
 			var ym:Number = xm;
 			bckg.x = -(curX*xm)%(17*xm);
 			bckg.y = -(curY*ym)%(17*ym);
 			if (xm!=lastxm)
 				bckg.drawWithSize(17*xm);//17.1 - это 45/startXm
 			lastxm = xm;
-			for (var i: int = 0; i < 10; i++) {
-				_feedPtr[i] = 0;
-			}
 			
-			var xa:Number = xArea/2 - curX;
-			var ya:Number = yArea/2 - curY;
+			var xa:Number = xArea/2 - curX - 100/xm;
+			var ya:Number = yArea/2 - curY - 100/xm;
 			
 			clb = (lb+xa)*xm;
 			crb = (rb+xa)*xm;
@@ -476,7 +475,7 @@
 			world.graphics.lineTo(clb,cbb);
 			world.graphics.lineTo(clb,ctb);
 			
-			for (i = 5; i < m.length; i += 4) {
+			for (var i:uint = 5; i < m.length; i += 4) {
 				var id = m.getInt(i);
 				var _gx = m.getNumber(i+1);
 				var _gy = m.getNumber(i+2);
@@ -484,17 +483,11 @@
 				var _y = (_gy + ya)*ym;
 				var size = m.getNumber(i + 3)*xm;
 				if (id < 10) {
-					var feed: Feed;
-					if (_feedPtr[id] == _feed[id].length) {
-						feed = new Feed(_x, _y, id);
-						_feed[id].push(feed);
-					} else {
-						feed = _feed[id][_feedPtr[id]];
-						feed.x = _x;
-						feed.y = _y;
-					}
-					feedSpr.addChildAt(feed, 0);
-					_feedPtr[id] += 1;
+					var feed: Feed = _feed[String(_gx) + "x" + String(_gy)];
+					if (feed == undefined){
+						feed = new Feed(_x, _y, _gx, _gy, id);
+						_feed[String(_gx) + "x" + String(_gy)] = feed;
+					} 
 				} else if (id > 3000) {
 					var virus: Cell = waitingVirAndPlasm[String(id)];
 					if (virus == undefined){
@@ -550,9 +543,9 @@
 						cell = waitingCells[String(id)].shift();
 						if (waitingCells[String(id)].length == 0)
 							delete waitingCells[String(id)];
-						var ddx = ((_gx + xArea/2 - m.getNumber(1))*xm-cell.x)/koeff;
-						var ddy = ((_gy + yArea/2 - m.getNumber(2))*ym-cell.y)/koeff;
-						cell.x += ddx
+						var ddx = ((_gx + xArea/2 - m.getNumber(1)- 100/xm)*xm-cell.x)/koeff;
+						var ddy = ((_gy + yArea/2 - m.getNumber(2)- 100/xm)*ym-cell.y)/koeff;
+						cell.x += ddx;
 						cell.y += ddy;
 						cell.recovery();
 						cell.csize = size;
@@ -579,6 +572,28 @@
 					ca.hbTest(this);
 					ca.smooth();
 					ca.draw();
+			}
+			var coll:Boolean;
+			for each(var fa:Feed in _feed){
+				coll = false;
+				fa.x = (fa._gx+xa)*xm;
+				fa.y = (fa._gy+ya)*ym;
+				for each(var fc:Vector.<Cell> in renderedCells){
+					for each (var ffc:Cell in fc)
+						if (fa.hitCell(ffc)){
+							coll = true;
+							trace("hitCell");
+							break;
+						}
+				}
+				if (coll)
+					delete _feed[String(fa._gx) + "x" + String(fa._gy)];
+				else {
+					if(fa.hitWall())
+						delete _feed[String(fa._gx) + "x" + String(fa._gy)];
+					else
+						feedSpr.addChildAt(fa, 0);
+				}
 			}
 			waitingCells = renderedCells;
 			waitingVirAndPlasm = renderedVirAndPlasm;

@@ -12,10 +12,13 @@
 
 		private var color: Number;
 		private var _points: Array = new Array();
+		public var _gx, _gy;
 
-		public function Feed(_x: Number, _y: Number, id: int) {
+		public function Feed(_x: Number, _y: Number, _gx:Number, _gy:Number, id: int) {
 			this.x = _x;
 			this.y = _y;
+			this._gx = _gx;
+			this._gy = _gy;
 			this._size = 3;
 			var size: Number = 3;
 			switch(id) {
@@ -50,6 +53,7 @@
 					this.color = 0xFFFF33;
 					break;
 			}
+
 			/*var k = 2 * Math.PI / 5;
 			for (var i: Number = 0; i < 5; i++) {
 				_points.push(new CellPoint(_size * Math.sin(i * k), _size * Math.cos(i * k)));
@@ -68,6 +72,16 @@
 
 		}
 
+		public function hitCell(c: Cell): Boolean {
+			if (((c.x-x)*(c.x-x)+(c.y-y)*(c.y-y)) < c.csize*c.csize)
+					return true;
+			return false;
+		}
+		public function hitWall(): Boolean {
+			if((x < 0) && (x > 850) && (y < 0) && (y > 650))
+				return true;
+			return false;
+		}
 		public function draw() {
 			//drawToBuf();
 			rounderObject.graphics.clear();
