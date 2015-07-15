@@ -26,7 +26,6 @@
 		public var gameID: String = "cells2-5yrswumyieeskxfpoge6q";
 		public var userID: String;
 		public var connection: Connection;
-		private var cl:Client;
 		//---------------------------------------
 		// PRIVATE VARIABLES
 		//---------------------------------------
@@ -58,10 +57,9 @@
 		private var wtime:int = 0;
 		
 		private var lastX:Number = 0, lastY:Number = 0, nextX:Number = 100, nextY:Number = 100;
-		private var xArea:Number = 274;
-		private var yArea:Number = 214;
-		private var lastxm:Number = 0;
-		
+		private var xArea:int = 400;
+		private var yArea:int = 306;
+				
 		private var fsu:int = -1;
 		private var inbetween:uint = 0;
 		
@@ -74,7 +72,7 @@
 		
 		private var sMBShowed: Boolean = false;
 		
-		private var bckg:Grid = null;
+		private var bckg:Sprite = null;
 		private var world:Sprite = new Sprite();
 		private var feedSpr:Sprite = new Sprite;
 		private var playersCellsInstances = new Sprite();
@@ -96,7 +94,7 @@
 		
 		private var period;
 		
-		private var koeff:Number = 8;
+		private var koeff:Number = 16;
 		
 		//---------------------------------------
 		// CONSTRUCTOR
@@ -132,12 +130,10 @@
 			var myC:FPSMemCounter = new FPSMemCounter(0);
 			var chartWindow1:Chart = new Chart();
 			addChildAt(myC,4);
-			addChildAt(chartWindow,5);
-			chartWindow.y = stage.stageHeight - chartWindow.height-vkapi.height;
+			addChildAt(chartWindow,6);
+			chartWindow.y = stage.stageHeight - chartWindow.height - 50;
 			addChild(vkapi);
 			vkapi.y = stage.stageHeight - vkapi.height;
-			PlayerIO.connect(stage, gameID, "public", userID, "", null, handleConnect, handleError);
-	
 		}
 
 		function mclick(e: MouseEvent) {
@@ -154,9 +150,14 @@
 		}
 
 		function buttonPressed(event: MouseEvent) {
+			trace("button")
 			isMouseDown = true;
 			messageString.setTextFormat(new TextFormat("Verdana",10,0xFFFFFF,false,false,false));
 			stage.focus = messageString;
+			messageString.type = TextFieldType.INPUT;
+			if (messageString.text.length > 50){
+							messageString.type = TextFieldType.DYNAMIC;
+						}
 		}
 
 		function buttonReleased(event: MouseEvent) {
@@ -165,6 +166,7 @@
 			if (messageString.text != "" || messageString.text != " ") {
 				connection.send("playerSaying", messageString.text);
 				messageString.text = "";
+				messageString.type = TextFieldType.INPUT;
 			}
 		}
 
@@ -187,18 +189,24 @@
 			}
 		}
 		function displayKeyDown(e: KeyboardEvent) {
-
+			
 			if (!isMouseDown) {
 				if (connection != null) {
 					if (e.keyCode == 32) connection.send("split"); //отправка на сервер сообщения о нажатии пробела
-					if (e.keyCode == 87) connection.send("throwpart"); // отправка на сервер сообщения о нажатии на "w"					
+					if (e.keyCode == 87) connection.send("throwpart"); // отправка на сервер сообщения о нажатии на "w"
 					if (sMBShowed){
 						checkMK(e);
 					} else {
 						if (e.keyCode == 67) openSMBox();
 					}
+					if (messageString.text.length > 49){
+							messageString.type = TextFieldType.DYNAMIC;
+						}
 				}
-			} 
+			}
+			if (messageString.text.length > 49){
+							messageString.type = TextFieldType.DYNAMIC;
+						}
 		}
 
 		private function init(event: Event): void {
@@ -235,23 +243,18 @@
 			menu.height = 300;
 			addChild(menu);
 			addChild(messageString);
+			messageString.visible = true;
+			messageString.x = 0;
+			messageString.y = 100;
+			messageString.alpha = 0.8;
+			messageString.width = 200;
 			messageString.type = TextFieldType.INPUT;
 			//goPlay();
 		}
 		
 		public function goPlay():void{
 			menu.visible = false;
-			// Создаем или подключаемся к игровой комнате "test"
-			if(cl!=null)
-			cl.multiplayer.createJoinRoom(
-				"test", // Идентификатор комнаты. Если устаноить null то идентификатор будет присвоен случайный
-				"MyCode", // Тип игры запускаемый на сервере (привязка к серверному коду)
-				true, // Должна ли конмата видима в списке комнат? (client.multiplayer.listRooms)
-				{}, // Какие-либо данные. Эти данные будут возвращены в список комнат. Значения могут быть изменены на сервере.
-				{}, // Какие-либо данные пользователя.
-				handleJoin, // Указатель на метод который будет вызван при успешном подключении к комнате.
-				handleError // Указатель на метод который будет вызван в случаее ошибки подключения
-			);
+			PlayerIO.connect(stage, gameID, "public", userID, "", null, handleConnect, handleError);
 		}
 		
 		private function playerDead(m: Message):void{
@@ -271,19 +274,21 @@
 		// При успешном соединении:
 		private function handleConnect(client: Client): void {
 			trace("Connected to server!");
-			cl = client;
-			
+
 			// Устанавливаем подключение к локальному серверу для отладки
 			//client.multiplayer.developmentServer = "localhost:8184"; //Если закомментить эту строчку, то будет подключение на удаленный сервер
-			cl.multiplayer.createJoinRoom(
+
+			// Создаем или подключаемся к игровой комнате "test"
+			client.multiplayer.createJoinRoom(
 				"test", // Идентификатор комнаты. Если устаноить null то идентификатор будет присвоен случайный
 				"MyCode", // Тип игры запускаемый на сервере (привязка к серверному коду)
 				true, // Должна ли конмата видима в списке комнат? (client.multiplayer.listRooms)
 				{}, // Какие-либо данные. Эти данные будут возвращены в список комнат. Значения могут быть изменены на сервере.
-				{Type:"Spectator"}, // Какие-либо данные пользователя.
+				{}, // Какие-либо данные пользователя.
 				handleJoin, // Указатель на метод который будет вызван при успешном подключении к комнате.
 				handleError // Указатель на метод который будет вызван в случаее ошибки подключения
 			);
+
 			// создаем новую клетку
 			//var cell = new Cell();
 			//var cell = new Cell();
@@ -349,7 +354,7 @@
 			trace(nickName);
 			trace(msg);
 			trace("----");
-			chartWindow.setMsg(nickName, msg, '0000ff');
+			chartWindow.setMsg(nickName, msg, color);
 		}		
 		
 		
@@ -382,15 +387,10 @@
 		
 		private function onEnterFrame(e: Event) {
 
-			if(menu.visible){
-				nextX = nextMsg.getNumber(0);
-				nextY = nextMsg.getNumber(1);
-			}
 			var dx = (nextX - lastX)/koeff;
 			var dy = (nextY - lastY)/koeff;
 			var sdx = dx/xArea*stage.stageWidth;
 			var sdy = dy/yArea*stage.stageHeight;
-
 			drawWorld(nextMsg, dx, dy);
 			
 			/*inbetween++;
@@ -417,17 +417,15 @@
 			feedSpr.removeChildren();
 			world.graphics.clear();
 			playersCellsInstances.removeChildren();
+			//trace(m)
 			xArea = m.getNumber(3);
 			yArea = m.getNumber(4);
 			var curX: Number = lastX + dx;
 			var curY: Number = lastY + dy;
-			var xm:Number = (stage.stageWidth as Number)/xArea;
+			var xm:Number = stage.stageWidth/xArea;
 			var ym:Number = xm;
-			bckg.x = -(curX*xm)%(17*xm);
-			bckg.y = -(curY*ym)%(17*ym);
-			if (xm!=lastxm)
-				bckg.drawWithSize(17*xm);//17.1 - это 45/startXm
-			lastxm = xm;
+			bckg.x = -(curX*xm)%30;
+			bckg.y = -(curY*ym)%30;
 			for (var i: int = 0; i < 10; i++) {
 				_feedPtr[i] = 0;
 			}
@@ -453,7 +451,7 @@
 				var _gy = m.getNumber(i+2);
 				var _x = (_gx + xa)*xm;
 				var _y = (_gy + ya)*ym;
-				var size = m.getNumber(i + 3)*xm;
+				var size = 1.05*m.getNumber(i + 3)*	xm;
 				if (id < 10) {
 					var feed: Feed;
 					if (_feedPtr[id] == _feed[id].length) {
@@ -466,35 +464,12 @@
 					}
 					feedSpr.addChildAt(feed, 0);
 					_feedPtr[id] += 1;
-				} else if (id > 3000) {
-					var virus: Cell = waitingVirAndPlasm[String(id)];
-					if (virus == undefined){
-						virus = new Cell(_x, _y, size, 0x00FF00, true);
-						
-					} else {
-						delete waitingVirAndPlasm[String(id)];
-						//var ddx = ((_gx + xArea/2 - m.getNumber(1))*xm-virus.x)/koeff;
-						//var ddy = ((_gy + yArea/2 - m.getNumber(2))*ym-virus.y)/koeff;
-						//virus.x += ddx
-						//virus.y += ddy;
-						virus.x = _gx;
-						virus.y = _gy;
-						virus.recovery();
-					}
-					
-					for each (var c in waitingCells)
-						checkCollisions(virus,c);
-					for each (c in renderedCells)					
-						checkCollisions(virus,c);
-					checkCollisions(virus, renderedVirAndPlasm);
-					renderedVirAndPlasm[String(id)] = virus;
-					world.addChild(virus);
-				} else if(id > 2000){
-					var plasm: Protoplasm = waitingVirAndPlasm[String(id)];
+				} else if(id >= 2000 && id < 3000){
+					var plasm: Protoplasm = waitingVirAndPlasm[String(_gx) + "x" +String(_gy)];
 					if (plasm == undefined){
 						plasm = new Protoplasm(_x, _y, size, 0x00FF00);
 					} else {
-						delete waitingVirAndPlasm[String(id)];
+						delete waitingVirAndPlasm[String(_gx) + "x" +String(_gy)];
 						var ddx = ((_gx + xArea/2 - m.getNumber(1))*xm-plasm.x)/koeff;
 						var ddy = ((_gy + yArea/2 - m.getNumber(2))*ym-plasm.y)/koeff;
 						plasm.x += ddx
@@ -508,13 +483,39 @@
 					for each (c in renderedCells)
 						checkCollisions(plasm,c);
 					checkCollisions(plasm, renderedVirAndPlasm);
-					renderedVirAndPlasm[String(id)] = plasm;
+					renderedVirAndPlasm[String(_gx) + "x" +String(_gy)] = plasm;
 					world.addChild(plasm);
-				} else if (id > 1000) {
+				}else if (id >= 3000) {
+					//trace("vir")
+					//trace(size);
+					//trace(m.getNumber(i + 3));
+					var virus: Cell = waitingVirAndPlasm[String(_gx) + "x" +String(_gy)];
+					if (virus == undefined){
+						virus = new Cell(_x, _y, size, 0x00FF00, true);
+						
+					} else {
+						delete waitingVirAndPlasm[String(_gx) + "x" +String(_gy)];
+						virus.x = _x;
+						virus.y = _y;
+						virus.recovery();
+					}
+					
+					for each (var c in waitingCells)
+						checkCollisions(virus,c);
+					for each (c in renderedCells)					
+						checkCollisions(virus,c);
+					checkCollisions(virus, renderedVirAndPlasm);
+					renderedVirAndPlasm[String(_gx) + "x" +String(_gy)] = virus;
+					world.addChild(virus);
+				} else if (id >= 1000 && id < 2000) {
+					//trace("c")
+					//trace(size);
+					//trace(m.getNumber(i + 3));
 					var cellArr:Vector.<Cell> = waitingCells[String(id)];
 					var cell:Cell;
 					if (cellArr == undefined){
 					 cellArr = new Vector.<Cell>();
+					 //trace(size)
 					 cell = new Cell(_x,_y,size,id,false,showNick,showMass, nnArr[idArr.indexOf(int(id))]);
 					} else {
 						cell = waitingCells[String(id)].shift();
