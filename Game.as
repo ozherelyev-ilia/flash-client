@@ -130,10 +130,10 @@
 			msgBox.y = stage.stageHeight - msgBox.height;
 			chartWindow.visible = true;
 			var myC:FPSMemCounter = new FPSMemCounter(0);
-			var chartWindow1:Chart = new Chart();
+			//var chartWindow1:Chart = new Chart();
 			addChildAt(myC,4);
-			addChildAt(chartWindow,5);
-			chartWindow.y = stage.stageHeight - chartWindow.height-vkapi.height;
+			addChildAt(chartWindow,6);
+			chartWindow.y = stage.stageHeight - chartWindow.height- 50;
 			addChild(vkapi);
 			vkapi.y = stage.stageHeight - vkapi.height;
 			PlayerIO.connect(stage, gameID, "public", userID, "", null, handleConnect, handleError);
@@ -157,11 +157,16 @@
 			isMouseDown = true;
 			messageString.setTextFormat(new TextFormat("Verdana",10,0xFFFFFF,false,false,false));
 			stage.focus = messageString;
+			messageString.type = TextFieldType.INPUT;
+			if (messageString.text.length > 49){
+				messageString.type = TextFieldType.DYNAMIC;
+			}
 		}
 
 		function buttonReleased(event: MouseEvent) {
 			isMouseDown = false;
 			stage.focus = this;
+			messageString.type = TextFieldType.INPUT;
 			if (messageString.text != "" || messageString.text != " ") {
 				connection.send("playerSaying", messageString.text);
 				messageString.text = "";
@@ -196,7 +201,14 @@
 						checkMK(e);
 					} else {
 						if (e.keyCode == 67) openSMBox();
+						if (messageString.text.length > 49){
+							messageString.type = TextFieldType.DYNAMIC;
+						}
 					}
+				}
+				
+				if (messageString.text.length > 49){
+					messageString.type = TextFieldType.DYNAMIC;
 				}
 			} 
 		}
@@ -242,6 +254,19 @@
 		public function goPlay():void{
 			menu.visible = false;
 			// Создаем или подключаемся к игровой комнате "test"
+			connection.disconnect();
+			stage.removeEventListener(MouseEvent.MOUSE_DOWN, buttonPressed);
+			stage.removeEventListener(MouseEvent.MOUSE_UP, buttonReleased);
+
+			stage.removeEventListener(KeyboardEvent.KEY_DOWN, displayKeyDown);
+
+			connection.removeMessageHandler("mouseRequest", sendMouseXY); 
+
+			connection.removeMessageHandler("currentState", update);
+			connection.removeMessageHandler("*", messageHandler); 
+			connection.removeMessageHandler("playersList", playersList);
+			connection.removeMessageHandler("saying", onMessageGot);
+			connection.removeMessageHandler("playerDead", playerDead);
 			if(cl!=null)
 			cl.multiplayer.createJoinRoom(
 				"test", // Идентификатор комнаты. Если устаноить null то идентификатор будет присвоен случайный
@@ -329,13 +354,12 @@
 			connection.addMessageHandler("mouseRequest", sendMouseXY); // Добавление обработчика сообщения-запроса текущих координат мыши
 
 			connection.addMessageHandler("currentState", update);
-			this.connection.addMessageHandler("*", messageHandler); // Добавление обработчика прочих сообщений
+			connection.addMessageHandler("*", messageHandler); // Добавление обработчика прочих сообщений
 			connection.addMessageHandler("playersList", playersList);
 			connection.addMessageHandler("saying", onMessageGot);
 			connection.addMessageHandler("playerDead", playerDead);
-	
-			
 		}
+		
 		private function onMessageGot(m: Message){
 			var pid:int = m.getInt(0);
 			var msg:String = m.getString(1);
@@ -383,8 +407,8 @@
 		private function onEnterFrame(e: Event) {
 
 			if(menu.visible){
-				nextX = nextMsg.getNumber(0);
-				nextY = nextMsg.getNumber(1);
+				nextX = nextMsg.getNumber(1);
+				nextY = nextMsg.getNumber(2);
 			}
 			var dx = (nextX - lastX)/koeff;
 			var dy = (nextY - lastY)/koeff;
@@ -479,6 +503,7 @@
 						//virus.y += ddy;
 						virus.x = _gx;
 						virus.y = _gy;
+						virus.csize = size;
 						virus.recovery();
 					}
 					
