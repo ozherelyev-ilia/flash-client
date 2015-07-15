@@ -1,4 +1,4 @@
-package {
+﻿package {
 	import flash.geom.Point;
 	import flash.display.Sprite;
 	import flash.display.Shape;
@@ -201,7 +201,7 @@ package {
 			if(2 * _size > bmp.width) {
 				bmp = new BitmapData(4 * _size, 4 * _size, true, 0);
 			}
-			m.translate(_size - this._size, _size - this._size);
+			m.translate(2*(_size - this._size), 2*(_size - this._size));
 			this._size = _size;
 			rounderObject.height = 2*_size;
 			rounderObject.width = 2*_size;

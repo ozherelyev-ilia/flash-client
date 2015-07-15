@@ -137,7 +137,6 @@
 			addChild(vkapi);
 			vkapi.y = stage.stageHeight - vkapi.height;
 			PlayerIO.connect(stage, gameID, "public", userID, "", null, handleConnect, handleError);
-	
 		}
 
 		function mclick(e: MouseEvent) {
@@ -245,6 +244,7 @@
 			menu.y = (yArea/2)/yArea*stage.stageHeight;
 			menu.width = 200;
 			menu.height = 300;
+			menu.alpha = 0.6;
 			addChild(menu);
 			addChild(messageString);
 			messageString.type = TextFieldType.INPUT;
@@ -253,6 +253,10 @@
 		
 		public function goPlay():void{
 			menu.visible = false;
+			lastX = 0;
+			lastY = 0;
+			nextX = 0;
+			nextY = 0;
 			// Создаем или подключаемся к игровой комнате "test"
 			connection.disconnect();
 			stage.removeEventListener(MouseEvent.MOUSE_DOWN, buttonPressed);
@@ -280,13 +284,14 @@
 		}
 		
 		private function playerDead(m: Message):void{
-			menu.visible = true;
+			/*menu.visible = true;
 			connection.removeMessageHandler("mouseRequest", sendMouseXY);
 			connection.removeMessageHandler("currentState", playerDead);
 			connection.removeMessageHandler("playerDead", playerDead);
 			connection.disconnect();
 			this.stopAllMovieClips();
-			menu.startNew();
+			menu.startNew();*/
+			goPlay();
 		}
 
 
@@ -501,8 +506,8 @@
 						//var ddy = ((_gy + yArea/2 - m.getNumber(2))*ym-virus.y)/koeff;
 						//virus.x += ddx
 						//virus.y += ddy;
-						virus.x = _gx;
-						virus.y = _gy;
+						virus.x = _x;
+						virus.y = _y;
 						virus.csize = size;
 						virus.recovery();
 					}
