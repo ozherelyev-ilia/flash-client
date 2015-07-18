@@ -9,19 +9,19 @@
 
 	public class Feed extends Body {
 
-
 		private var color: Number;
-		private var _points: Array = new Array();
-		public var _gx, _gy;
+		public var _gx:Number, _gy:Number;
+		public var fid:uint;
 
-		public function Feed(_x: Number, _y: Number, _gx:Number, _gy:Number, id: int) {
+		public function Feed(_x: Number, _y: Number, _gx:Number, _gy:Number, id: uint) {
 			this.x = _x;
 			this.y = _y;
 			this._gx = _gx;
 			this._gy = _gy;
+			this.fid = id;
 			this._size = 3;
-			var size: Number = 3;
-			switch(id) {
+			var size: Number = 4;
+			switch(id%10) {
 				case 0:
 					this.color = 0xFF3333;
 					break;
@@ -62,9 +62,6 @@
 
 
 			rounderObject = new Shape();
-			bmp = new BitmapData(2 * size, 2 * size, true, 0);
-			m.translate(size, size);
-
 			addChild(rounderObject);
 
 			this.cacheAsBitmap = false;
@@ -95,18 +92,5 @@
 			}*/
 			rounderObject.graphics.drawCircle(0, 0, _size);
 		}
-
-		public function drawToBuf() {
-			buf.graphics.clear();
-
-			buf.graphics.beginFill(color);
-			buf.graphics.lineStyle(10, color + 0x006600);
-			buf.graphics.moveTo(_points[0].sx(), _points[0].sy());
-
-			for(var i: Number = 0; i < Math.floor(Math.sqrt(20 * _size)); i++) {
-				buf.graphics.lineTo(_points[i].sx(), _points[i].sy());
-			}
-		}
-
 	}
 }

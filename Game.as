@@ -18,6 +18,7 @@
 	import flash.text.TextFormat;
 	import flash.text.TextFieldType;
 	import fl.controls.Label;
+	import flash.utils.Dictionary;
 
 	public class Game extends Sprite {
 		//---------------------------------------
@@ -38,16 +39,16 @@
 
 		//private var _players: Vector.<String> = new Vector.<String>(); //Список игроков
 		private var currentPlayer: Player;
+		private const maxPlayers = 150;
 		private var players: Vector.<Player> = new Vector.<Player> ();
 		private var _cells: Vector.<Cell> = new Vector.<Cell> (); // Список клеток всех игроков
 		private var _throws: Vector.<CellChild> = new Vector.<CellChild> (); // Список отщепленных кормовых частиц с клетки
 		private var _viruses: Vector.<VirusCell> = new Vector.<VirusCell> (); // Список вирусов
-		private var _feed: Object = new Object();
-		private var _feedPtr: Vector.<int> = new Vector.<int> ();
-		private var renderedCells:Object = new Object();
-		private var waitingCells:Object = new Object();
-		private var renderedVirAndPlasm:Object = new Object();
-		private var waitingVirAndPlasm:Object = new Object();
+		private var _feed: Dictionary = new Dictionary();
+		private var renderedCells:Vector.<BodiesDictionary> = new Vector.<BodiesDictionary>(maxPlayers);
+		private var waitingCells:Vector.<BodiesDictionary> = new Vector.<BodiesDictionary>(maxPlayers);
+		private var renderedVirAndPlasm:Dictionary = new Dictionary();
+		private var waitingVirAndPlasm:Dictionary = new Dictionary();
 		
 		private var isMouseDown: Boolean = false;
 		private var messageString: TextField = new TextField();
@@ -137,6 +138,10 @@
 			addChild(vkapi);
 			vkapi.y = stage.stageHeight - vkapi.height;
 			PlayerIO.connect(stage, gameID, "public", userID, "", null, handleConnect, handleError);
+			for (var i:int = 150; i>=0; i--){
+				waitingCells[i] = new BodiesDictionary();
+				renderedCells[i] = new BodiesDictionary();
+			}
 		}
 
 		function mclick(e: MouseEvent) {
@@ -272,7 +277,7 @@
 			connection.removeMessageHandler("saying", onMessageGot);
 			connection.removeMessageHandler("playerDead", playerDead);
 			
-			_feed = new Object();
+			_feed = new Dictionary();
 			if(cl!=null)
 				cl.multiplayer.createJoinRoom(
 					"test", // Идентификатор комнаты. Если устаноить null то идентификатор будет присвоен случайный
@@ -474,27 +479,23 @@
 			world.graphics.lineTo(crb,cbb);
 			world.graphics.lineTo(clb,cbb);
 			world.graphics.lineTo(clb,ctb);
-			
-			for (var i:uint = 5; i < m.length; i += 4) {
-				var id = m.getInt(i);
-				var _gx = m.getNumber(i+1);
-				var _gy = m.getNumber(i+2);
-				var _x = (_gx + xa)*xm;
-				var _y = (_gy + ya)*ym;
-				var size = m.getNumber(i + 3)*xm;
-				if (id < 10) {
-					var feed: Feed = _feed[String(_gx) + "x" + String(_gy)];
-					if (feed == undefined){
-						feed = new Feed(_x, _y, _gx, _gy, id);
-						_feed[String(_gx) + "x" + String(_gy)] = feed;
-					} 
-				} else if (id > 3000) {
-					var virus: Cell = waitingVirAndPlasm[String(id)];
+		
+			for (var i:uint = 5; i < m.length;) {
+				var id:uint = m.getInt(i);
+				var _gx:Number = m.getNumber(i+1);
+				var _gy:Number = m.getNumber(i+2);
+				var _x:Number = (_gx + xa)*xm;
+				var _y:Number = (_gy + ya)*ym;
+				var size:Number;			
+
+				if(id < 1000000){
+					var virus: Cell = waitingVirAndPlasm[id];
+					size = m.getNumber(i + 3)*xm;
 					if (virus == undefined){
 						virus = new Cell(_x, _y, size, 0x00FF00, true);
 						
 					} else {
-						delete waitingVirAndPlasm[String(id)];
+						delete waitingVirAndPlasm[id];
 						//var ddx = ((_gx + xArea/2 - m.getNumber(1))*xm-virus.x)/koeff;
 						//var ddy = ((_gy + yArea/2 - m.getNumber(2))*ym-virus.y)/koeff;
 						//virus.x += ddx
@@ -510,14 +511,43 @@
 					for each (c in renderedCells)					
 						checkCollisions(virus,c);
 					checkCollisions(virus, renderedVirAndPlasm);
-					renderedVirAndPlasm[String(id)] = virus;
+					renderedVirAndPlasm[id] = virus;
 					world.addChild(virus);
-				} else if(id > 2000){
-					var plasm: Protoplasm = waitingVirAndPlasm[String(id)];
+					i+=4;
+				} else if(id < 2000000){
+					var pid:uint = uint((id - 1000000)/1000);
+					var cellDict:BodiesDictionary = waitingCells[pid];
+					var cell:Cell;
+					size = m.getNumber(i + 3)*xm;
+					if (cellDict.empty){
+						cell = new Cell(_x,_y,size,pid,false,showNick,showMass, nnArr[idArr.indexOf(pid)]);
+					} else {
+						cell = waitingCells[pid][id];
+						delete waitingCells[pid][id];
+						if (cell == undefined)
+							cell = new Cell(_x,_y,size,pid,false,showNick,showMass, nnArr[idArr.indexOf(pid)]);
+						var ddx = ((_gx + xArea/2 - m.getNumber(1)- 100/xm)*xm-cell.x)/koeff;
+						var ddy = ((_gy + yArea/2 - m.getNumber(2)- 100/xm)*ym-cell.y)/koeff;
+						cell.x += ddx;
+						cell.y += ddy;
+						cell.recovery();
+						cell.csize = size;
+					}
+
+					for each (var c in renderedCells)
+						checkCollisions(cell, c);
+					if (renderedCells[pid].empty)
+						renderedCells[pid].empty = false;
+					renderedCells[pid][id] = cell;
+					playersCellsInstances.addChild(cell);
+					i+=4;
+				} else if (id < 3000000){
+					var plasm: Protoplasm = waitingVirAndPlasm[id];
+					size = m.getNumber(i + 3)*xm;
 					if (plasm == undefined){
 						plasm = new Protoplasm(_x, _y, size, 0x00FF00);
 					} else {
-						delete waitingVirAndPlasm[String(id)];
+						delete waitingVirAndPlasm[id];
 						var ddx = ((_gx + xArea/2 - m.getNumber(1))*xm-plasm.x)/koeff;
 						var ddy = ((_gy + yArea/2 - m.getNumber(2))*ym-plasm.y)/koeff;
 						plasm.x += ddx
@@ -531,34 +561,19 @@
 					for each (c in renderedCells)
 						checkCollisions(plasm,c);
 					checkCollisions(plasm, renderedVirAndPlasm);
-					renderedVirAndPlasm[String(id)] = plasm;
+					renderedVirAndPlasm[id] = plasm;
 					world.addChild(plasm);
-				} else if (id > 1000) {
-					var cellArr:Vector.<Cell> = waitingCells[String(id)];
-					var cell:Cell;
-					if (cellArr == undefined){
-					 cellArr = new Vector.<Cell>();
-					 cell = new Cell(_x,_y,size,id,false,showNick,showMass, nnArr[idArr.indexOf(int(id))]);
-					} else {
-						cell = waitingCells[String(id)].shift();
-						if (waitingCells[String(id)].length == 0)
-							delete waitingCells[String(id)];
-						var ddx = ((_gx + xArea/2 - m.getNumber(1)- 100/xm)*xm-cell.x)/koeff;
-						var ddy = ((_gy + yArea/2 - m.getNumber(2)- 100/xm)*ym-cell.y)/koeff;
-						cell.x += ddx;
-						cell.y += ddy;
-						cell.recovery();
-						cell.csize = size;
+					i+=4;
+				} else {
+					var feed: Feed = _feed[id];
+					if (feed == undefined){
+						feed = new Feed(_x, _y, _gx, _gy, id);
+						_feed[id] = feed;
 					}
-
-					for each (var c in renderedCells)
-						checkCollisions(cell, c);
-					if (renderedCells[String(id)] == undefined)
-						renderedCells[String(id)] = new Vector.<Cell>();
-					renderedCells[String(id)].push(cell);
-					playersCellsInstances.addChild(cell);
+					i+=3;
 				}
 			}
+			
 			lastX = curX;
 			lastY = curY;
 			for each (var ca in renderedCells){
@@ -578,27 +593,29 @@
 				coll = false;
 				fa.x = (fa._gx+xa)*xm;
 				fa.y = (fa._gy+ya)*ym;
-				for each(var fc:Vector.<Cell> in renderedCells){
+				for each(var fc:BodiesDictionary in renderedCells){
 					for each (var ffc:Cell in fc)
 						if (fa.hitCell(ffc)){
 							coll = true;
-							trace("hitCell");
 							break;
 						}
 				}
 				if (coll)
-					delete _feed[String(fa._gx) + "x" + String(fa._gy)];
+					delete _feed[fa.fid];
 				else {
 					if(fa.hitWall())
-						delete _feed[String(fa._gx) + "x" + String(fa._gy)];
+						delete _feed[fa.fid];
 					else
 						feedSpr.addChildAt(fa, 0);
 				}
 			}
+			var tVec:Vector.<BodiesDictionary> = waitingCells;
 			waitingCells = renderedCells;
+			renderedCells = tVec;
+			for (var j:int = 150; j >= 0; j--)
+				renderedCells[j] = new BodiesDictionary(); 
 			waitingVirAndPlasm = renderedVirAndPlasm;
-			renderedCells = new Object();
-			renderedVirAndPlasm = new Object();
+			renderedVirAndPlasm = new Dictionary();
 		}
 		
 	public function checkCollisions(cell:Cell, cells:Object):void{
@@ -606,12 +623,8 @@
 				Cell.hitCells(s,cell);
 				Cell.hitCells(cell,s);
 				s.smooth();
-				//s.smooth();
 				cell.smooth();
-				//cell.smooth();
-				s.draw();//это можно попытаться вынести отсюда, вообще
 			}
-			cell.draw();
 		}
 		//В сообщении передается массив в котором последовательно идут: 1) айди объекта, 2) X, 3) Y, 4) радиус, далее айди следующего объекта и т.д. 
 		//Айди следующие: 
