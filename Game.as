@@ -81,10 +81,10 @@
 		private var playersCellsInstances = new Sprite();
 		private var msgBox:ShortMessageBox = new ShortMessageBox();
 		private var menu:Menu;
+		private var cScr:ConnectingScreen = new ConnectingScreen();
 		private var curFrame:uint = 0;
 		
-		private var idArr = new Array();
-		private var nnArr = new Array();
+		private var nnArr = new Array(maxPlayers);
 		
 		private var tb = 0, lb = 0, rb = 2505, bb = 2505;
 		public var ctb = 0, clb = 0, crb = 5000, cbb = 5000;
@@ -96,6 +96,8 @@
 		private var nextMsg:Message;
 		
 		private var period;
+		
+		private var playersGotten:Boolean = false;
 		
 		private var koeff:Number = 8;
 		
@@ -142,6 +144,7 @@
 				waitingCells[i] = new BodiesDictionary();
 				renderedCells[i] = new BodiesDictionary();
 			}
+			addChild(cScr);
 		}
 
 		function mclick(e: MouseEvent) {
@@ -258,6 +261,7 @@
 		
 		public function goPlay():void{
 			menu.visible = false;
+			vkapi.visible = false;
 			lastX = 0;
 			lastY = 0;
 			nextX = 0;
@@ -272,6 +276,7 @@
 			connection.removeMessageHandler("mouseRequest", sendMouseXY); 
 
 			connection.removeMessageHandler("currentState", update);
+			connection.removeMessageHandler("food", addFood);
 			connection.removeMessageHandler("*", messageHandler); 
 			connection.removeMessageHandler("playersList", playersList);
 			connection.removeMessageHandler("saying", onMessageGot);
@@ -288,6 +293,7 @@
 					handleJoin, // Указатель на метод который будет вызван при успешном подключении к комнате.
 					handleError // Указатель на метод который будет вызван в случаее ошибки подключения
 				);
+					
 		}
 		
 		private function playerDead(m: Message):void{
@@ -328,7 +334,7 @@
 			//cell.y = _display.height / 2;
 			//_cells.push(cell);
 
-
+			removeChild(cScr);
 		}
 
 		// отправка на сервер сообщения с текущими координатами мыши
@@ -349,7 +355,6 @@
 		private function handleJoin(connection: Connection): void {
 
 			if (connection != null) this.connection = connection;
-			vkapi.visible = false;
 			stage.addEventListener(MouseEvent.MOUSE_DOWN, buttonPressed);
 			stage.addEventListener(MouseEvent.MOUSE_UP, buttonReleased);
 
@@ -366,6 +371,7 @@
 			connection.addMessageHandler("mouseRequest", sendMouseXY); // Добавление обработчика сообщения-запроса текущих координат мыши
 
 			connection.addMessageHandler("currentState", update);
+			connection.addMessageHandler("food", addFood);
 			connection.addMessageHandler("*", messageHandler); // Добавление обработчика прочих сообщений
 			connection.addMessageHandler("playersList", playersList);
 			connection.addMessageHandler("saying", onMessageGot);
@@ -375,12 +381,11 @@
 		private function onMessageGot(m: Message){
 			var pid:int = m.getInt(0);
 			var msg:String = m.getString(1);
-			var nickName:String = nnArr[idArr.indexOf(pid)];
+			var nickName:String = nnArr[pid];
 			var color:String = "00000000" + pid.toString(16);
 			color = color.substring(color.length - 8,color.length);
 			trace("----");
 			trace(color);
-			trace(idArr)
 			trace(pid);
 			trace(nickName);
 			trace(msg);
@@ -390,18 +395,18 @@
 		
 		
 		private function playersList(m: Message) {
+			playersGotten = true;
 			for (var k:int = 0, i: int = 0; i < m.length; k++,i += 2)
 			{
-				idArr.push(m.getInt(i));
-				nnArr.push(m.getString(i+1));
+				nnArr[m.getInt(i)-1000] = m.getString(i+1);
 			}
 		}
 		
 		private function playerLeft(m: Message) {
 			var pid:int = m.getInt(0);
-			var k:int = idArr.indexOf(pid);
-			idArr.splice(k,1);
-			nnArr.splice(k,1);
+			//var k:int = idArr.indexOf(pid);
+			//idArr.splice(k,1);
+			//nnArr.splice(k,1);
 		}
 
 		private function checkMessages(){
@@ -426,8 +431,8 @@
 			var dy = (nextY - lastY)/koeff;
 			var sdx = dx/xArea*stage.stageWidth;
 			var sdy = dy/yArea*stage.stageHeight;
-
-			drawWorld(nextMsg, dx, dy);
+			if(playersGotten)
+				drawWorld(nextMsg, dx, dy);
 			
 			/*inbetween++;
 
@@ -520,12 +525,12 @@
 					var cell:Cell;
 					size = m.getNumber(i + 3)*xm;
 					if (cellDict.empty){
-						cell = new Cell(_x,_y,size,pid,false,showNick,showMass, nnArr[idArr.indexOf(pid)]);
+						cell = new Cell(_x,_y,size,pid,false,showNick,showMass, nnArr[pid]);
 					} else {
 						cell = waitingCells[pid][id];
 						delete waitingCells[pid][id];
 						if (cell == undefined)
-							cell = new Cell(_x,_y,size,pid,false,showNick,showMass, nnArr[idArr.indexOf(pid)]);
+							cell = new Cell(_x,_y,size,pid,false,showNick,showMass, nnArr[pid]);
 						var ddx = ((_gx + xArea/2 - m.getNumber(1)- 100/xm)*xm-cell.x)/koeff;
 						var ddy = ((_gy + yArea/2 - m.getNumber(2)- 100/xm)*ym-cell.y)/koeff;
 						cell.x += ddx;
@@ -564,14 +569,7 @@
 					renderedVirAndPlasm[id] = plasm;
 					world.addChild(plasm);
 					i+=4;
-				} else {
-					var feed: Feed = _feed[id];
-					if (feed == undefined){
-						feed = new Feed(_x, _y, _gx, _gy, id);
-						_feed[id] = feed;
-					}
-					i+=3;
-				}
+				} else i+=3;
 			}
 			
 			lastX = curX;
@@ -593,8 +591,8 @@
 				coll = false;
 				fa.x = (fa._gx+xa)*xm;
 				fa.y = (fa._gy+ya)*ym;
-				for each(var fc:BodiesDictionary in renderedCells){
-					for each (var ffc:Cell in fc)
+				for (i = 0; i < maxPlayers;i++){
+					for each (var ffc:Cell in renderedCells[i])
 						if (fa.hitCell(ffc)){
 							coll = true;
 							break;
@@ -625,6 +623,29 @@
 				s.smooth();
 				cell.smooth();
 			}
+		}
+		
+		private function addFood(m:Message){
+			for (var i:uint = 0; i < m.length; i+=3){
+				var id:uint = m.getInt(i);
+				var _gx:Number = m.getNumber(i+1);
+				var _gy:Number = m.getNumber(i+2);
+				var xm:Number = ((stage.stageWidth as Number)+200)/xArea;
+				var ym:Number = xm;
+			
+				var xa:Number = xArea/2 - lastX - 100/xm;
+				var ya:Number = yArea/2 - lastY - 100/xm;
+				var _x:Number = (_gx + xa)*xm;
+				var _y:Number = (_gy + ya)*ym;
+				if (id >=3000000){
+					var feed: Feed = _feed[id];
+						if (feed == undefined){
+							feed = new Feed(_x, _y, _gx, _gy, id);
+							_feed[id] = feed;
+						}
+					i+=3;
+					}
+				}
 		}
 		//В сообщении передается массив в котором последовательно идут: 1) айди объекта, 2) X, 3) Y, 4) радиус, далее айди следующего объекта и т.д. 
 		//Айди следующие: 
