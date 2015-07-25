@@ -255,6 +255,11 @@
 			menu.alpha = 0.6;
 			addChild(menu);
 			addChild(messageString);
+			messageString.visible = true;
+			messageString.x = 10;
+			messageString.y = 420;
+			messageString.alpha = 0.8;
+			messageString.width = 200;
 			messageString.type = TextFieldType.INPUT;
 			//goPlay();
 		}
